@@ -139,7 +139,7 @@ a, button, [role="button"], .card, .chip, .theme-dot, .toggle, .ctrl-btn, .bar-b
 .filter-label{font-family:var(--mono);font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;flex-shrink:0; padding-bottom: 8px; display:block;}
 #cat-chips{
   display:flex;gap:8px;
-  overflow-x:auto;flex-wrap:nowrap;
+  overflow-x:auto;flex-wrap:wrap;
   padding-bottom:4px;
   scrollbar-width:none;
 }
