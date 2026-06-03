@@ -316,10 +316,10 @@ a, button, [role="button"], .card, .chip, .theme-dot, .toggle, .ctrl-btn, .bar-b
   }
   .bar-sep { display: none; }
   #cat-chips { flex-wrap: nowrap; overflow-x: auto; }
-  .tb-group:first-child{order:1;width:100%;justify-content:space-between}
+  .tb-group:first-child{order:0;width:100%;justify-content:space-between; gap:8px;}
   .tb-spacer{display:none}
-  .tb-group:last-child { order: 0; width: 100%; justify-content: flex-start; }
-  .bar-label{display:none}
+  .tb-group:last-child { order: 1; width: 100%; justify-content: flex-end; gap:8px; }
+  .bar-label{display:flex;flex-direction:column; }
   #main{padding:16px 12px 80px;gap:16px}
   #cards-grid{max-width:100%}
   .card{padding:24px 18px 24px;min-height:160px}
@@ -332,4 +332,8 @@ a, button, [role="button"], .card, .chip, .theme-dot, .toggle, .ctrl-btn, .bar-b
   .fs-row{flex-wrap:wrap}
   .pres-primary{font-size:26px!important}
   .pres-secondary{font-size:17px!important}
+  #lang-lvl{display:flex; flex-direction:column;}
+  #mute-btn, #streamer-btn, #settings-btn {
+    margin-left: 0;
+  }
 }
