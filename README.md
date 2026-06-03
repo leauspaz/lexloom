@@ -2,43 +2,53 @@
 
 A fast, themeable sentence-based language flashcard app. Built as a cleaner, more feature-rich with a lot of customisation, Good UX, and no dependencies.
 
-**Live:** [leauspaz.github.io](https://leauspaz.github.io)
+**Live:** [leauspaz.github.io/lexloom](https://leauspaz.github.io/lexloom)
 
 ---
 
 ## Features
 
 **Flashcard study**
+
 - Flip between English and your target language, reveal translations one at a time, and navigate with keyboard shortcuts or on-screen controls.
 
 **CEFR level filtering**
+
 - Filter cards by A1 through C2 so you study vocabulary appropriate to your level.
 
 **Language & category filtering**
+
 - Filter by language and topic category simultaneously; categories are auto-detected from your data.
 
 **Text-to-speech**
+
 - Hear the target sentence spoken aloud on reveal or on demand. Auto-play on reveal can be toggled.
 
 **Present Mode**
+
 - A full-screen streamer/classroom view with a progress bar, ideal for projection or live study sessions.
 
 **22 built-in themes**
+
 - 11 dark themes (Terminal, Amber, Arctic, Rose Gold, Obsidian, Dracula, Gruvbox, Catppuccin, Sonokai, Nord, Mocha)
 - 11 light themes (Ivory, Paper, Latte, Gruvbox Light, Solarized, Sepia, Rose Light, Sage, Slate, Sand, Mint)
 - A fully custom theme editor with per-variable colour controls.
 
 **Custom CSV upload**
-- Bring your own sentence data. 
+
+- Bring your own sentence data.
 - Drop a CSV with the columns `language, level, english, translation, category` and it loads instantly.
 
 **Remappable keyboard shortcuts**
+
 - Reassign Reveal, Next, Previous, and Speak (TTS) to any key.
 
 **Randomise order**
+
 - Toggle random sentence ordering on or off.
 
 **Adjustable font size**
+
 - Preset sizes from 14–30px or a custom px input.
 
 ---
@@ -99,4 +109,4 @@ Pure HTML, CSS, and vanilla JavaScript. No frameworks, no npm, no build tooling.
 
 ## Support
 
-If you find this useful: [☕ Buy Me a Coffee](https://buymeacoffee.com/leauspaz)
+If you find this useful: [🍷 Buy Me a Drink!](https://ko-fi.com/leauspaz)
