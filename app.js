@@ -402,7 +402,7 @@ function syncMuteBtn() {
 function applyTheme(name) {
   S.theme = name;
   const root = document.documentElement;
-  if (name === 'terminal') delete root.dataset.theme;
+  if (name === 'catpuccin') delete root.dataset.theme;
   else root.dataset.theme = name;
   $$('.theme-dot').forEach(d => d.classList.toggle('active', d.dataset.theme === name));
   syncColorPickers();
