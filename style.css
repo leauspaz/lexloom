@@ -397,8 +397,8 @@ a, button, [role="button"], .card, .chip, .theme-dot, .toggle, .ctrl-btn, .bar-b
   #settings-panel{padding:20px 18px;max-height:92vh}
   .color-grid{grid-template-columns:1fr}
   .fs-row{flex-wrap:wrap}
-  .pres-primary{font-size:26px!important}
-  .pres-secondary{font-size:17px!important}
+  .pres-primary{font-size:15px}
+  .pres-secondary{font-size:15px}
   #lang-lvl{display:flex;flex-direction:column;}
   #lang-dropdown, #level-dropdown { margin-left: 5.5px; }
   #mute-btn,#streamer-btn,#settings-btn{margin-left:0;}
