@@ -379,7 +379,7 @@ a, button, [role="button"], .card, .chip, .theme-dot, .toggle, .ctrl-btn, .bar-b
   transition: opacity 200ms ease, max-height 250ms ease, padding-top 200ms ease;
 }
 #topbar-drawer.open {
-  max-height: 200px; padding-top: 10px; opacity: 1;
+  max-height: 200px; padding-top: 10px; opacity: 1; overflow: visible;
 }
 #topbar-drawer .tb-group:first-child{justify-content:flex-end;}
 #topbar-drawer .tb-group:last-child{justify-content:flex-end;}
