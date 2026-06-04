@@ -295,10 +295,11 @@ function revealCard() {
   if (S.revealed) return;
   S.revealed = true;
   const row = currentRow(); if (!row) return;
-  const secondary = S.creatorFlip ? row.english : row.translation;
+  const showTarget = S.currentFlip !== undefined ? S.currentFlip : S.creatorFlip === true;
+  const secondary = showTarget ? row.english : row.translation;
   const sec = $('card-secondary');
   sec.classList.remove('hidden');
-  scramble(sec, secondary, 360, () => { if (S.autoPlay) speak(secondary, row.language); });
+  scramble(sec, secondary, 360, () => { if (S.autoPlay) speak(row.translation, row.language); });
   $('main-card').classList.add('revealed');
   $('card-hint').textContent = '';
 }
@@ -365,7 +366,7 @@ function speak(text, lang) {
 }
 function speakCurrent() {
   const row = currentRow(); if (!row) return;
-  speak(S.creatorFlip ? row.english : row.translation, row.language);
+  speak(row.translation, row.language);
 }
 
 /* ── Present mode ────────────────────────────────────────── */
@@ -437,7 +438,7 @@ function applyTheme(name) {
 function applyFontSize(px) {
   S.fontSize = Math.max(8, Math.min(72, parseInt(px) || 22));
   $$('.fs-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.fs) === S.fontSize));
-  const known = [14, 18, 22, 26, 30];
+  const known = [14, 18, 22, 26];
   const ci = $('fs-custom-input');
   if (known.includes(S.fontSize)) ci.value = '';
   else ci.value = S.fontSize;
@@ -548,7 +549,7 @@ function saveSettings() {
 function syncSettingsUI() {
   $$('.theme-dot').forEach(d => d.classList.toggle('active', d.dataset.theme === S.theme));
   $$('.fs-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.fs) === S.fontSize));
-  const known = [14, 18, 22, 26, 30];
+  const known = [14, 18, 22, 26];
   if (!known.includes(S.fontSize)) $('fs-custom-input').value = S.fontSize;
   syncToggle('toggle-random', S.randomize);
   syncMuteBtn();
