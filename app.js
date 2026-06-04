@@ -37,6 +37,21 @@ $('hamburger-btn').addEventListener('click', () => {
 });
 
 
+$$('#font-btns .font-btn').forEach(b => b.addEventListener('click', () => {
+  S.fontFamily = b.dataset.font;
+  $$('#font-btns .font-btn').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  if (S.fontFamily === 'inherit') {
+    document.documentElement.style.removeProperty('--sans');
+    document.documentElement.style.removeProperty('--mono');
+  } else {
+    document.documentElement.style.setProperty('--sans', S.fontFamily);
+    document.documentElement.style.setProperty('--mono', S.fontFamily);
+  }
+  saveSettings();
+}));
+
+
 /* ── Cursor (GSAP) ──────────────────────────────────────── */
 function initCursor() {
   const cur = $('cursor');
@@ -426,9 +441,7 @@ function syncMuteBtn() {
 /* ── Theme ───────────────────────────────────────────────── */
 function applyTheme(name) {
   S.theme = name;
-  const root = document.documentElement;
-  if (name === 'catpuccin') delete root.dataset.theme;
-  else root.dataset.theme = name;
+  document.documentElement.dataset.theme = name;
   $$('.theme-dot').forEach(d => d.classList.toggle('active', d.dataset.theme === name));
   syncColorPickers();
   saveSettings();
@@ -523,7 +536,7 @@ function cssToHex(color) {
 function loadSettings() {
   try {
     const s = JSON.parse(localStorage.getItem('ll_v3') || '{}');
-    if (s.theme) applyTheme(s.theme); else applyTheme('latte');
+    if (s.theme) applyTheme(s.theme); else applyTheme('catppuccin');
     if (s.fontSize) S.fontSize = s.fontSize;
     if (s.keyReveal !== undefined) S.keyReveal = s.keyReveal;
     if (s.keyNext !== undefined) S.keyNext = s.keyNext;
