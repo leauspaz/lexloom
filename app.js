@@ -32,6 +32,11 @@ const COLOR_VARS = [
 const $ = id => document.getElementById(id);
 const $$ = sel => document.querySelectorAll(sel);
 
+$('hamburger-btn').addEventListener('click', () => {
+  $('topbar-drawer').classList.toggle('open');
+});
+
+
 /* ── Cursor (GSAP) ──────────────────────────────────────── */
 function initCursor() {
   const cur = $('cursor');
@@ -685,6 +690,7 @@ function attachEvents() {
     if (S.creatorFlip === false) S.creatorFlip = true;
     else if (S.creatorFlip === true) S.creatorFlip = 'mix';
     else S.creatorFlip = false;
+    S.currentFlip = S.creatorFlip === 'mix' ? S.flipMap[S.poolIndex] : S.creatorFlip === true;
     $('flip-label').textContent = getFlipLabel();
     renderCard();
   });
