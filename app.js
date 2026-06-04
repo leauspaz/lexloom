@@ -183,6 +183,7 @@ function buildLangDropdown() {
   S.languages = ['All', ...new Set(S.allRows.map(r => r.language))];
   makeDropdown('lang-dropdown', S.languages, S.lang, val => {
     S.lang = val; applyFilters(); buildPool(); renderCard();
+    $('flip-label').textContent = getFlipLabel();
   });
 }
 
@@ -253,8 +254,9 @@ function renderCard() {
   S.revealed = false;
   if (!row) { grid.innerHTML = ''; $('empty-state').classList.add('active'); return; }
   $('empty-state').classList.remove('active');
-  const primary = S.creatorFlip ? row.translation : row.english;
-  const secondary = S.creatorFlip ? row.english : row.translation;
+  const showTarget = S.creatorFlip === true || (S.creatorFlip === 'mix' && Math.random() < 0.5);
+  const primary = showTarget ? row.translation : row.english;
+  const secondary = showTarget ? row.english : row.translation;
   grid.innerHTML = `
     <div class="card" id="main-card">
       <div class="card-meta">
@@ -654,9 +656,19 @@ function attachEvents() {
   $('prev-btn').addEventListener('click', goPrev);
   $('next-btn').addEventListener('click', goNext);
   $('reveal-btn').addEventListener('click', revealCard);
+
+  function getFlipLabel() {
+    const lang = (S.lang && S.lang !== 'All') ? S.lang : 'Target';
+    if (S.creatorFlip === false) return `EN → ${lang}`;
+    if (S.creatorFlip === true) return `EN ← ${lang}`;
+    return `EN ⇄ ${lang}`;
+  }
+
   $('flip-btn').addEventListener('click', () => {
-    S.creatorFlip = !S.creatorFlip;
-    $('flip-label').textContent = S.creatorFlip ? 'Target → EN' : 'EN → Target';
+    if (S.creatorFlip === false) S.creatorFlip = true;
+    else if (S.creatorFlip === true) S.creatorFlip = 'mix';
+    else S.creatorFlip = false;
+    $('flip-label').textContent = getFlipLabel();
     renderCard();
   });
 
