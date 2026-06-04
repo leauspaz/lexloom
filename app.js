@@ -9,7 +9,7 @@ const S = {
   languages: [], categories: [],
   lang: 'All', level: 'All', categories_sel: ['All'],
   autoPlay: true, presMode: false, presRevealed: false,
-  creatorFlip: false, revealed: false, randomize: true,
+  creatorFlip: 'mix', currentFlip: false, flipMap: {}, revealed: false, randomize: true,
   theme: 'latte', fontSize: 22,
   keyReveal: ' ', keyNext: 'ArrowRight', keyPrev: 'ArrowLeft', keyTTS: 's',
   customVars: {}, ttsVoice: '',
@@ -245,7 +245,16 @@ function shuffle(a) {
 function buildPool() {
   S.pool = S.randomize ? shuffle(S.filtered) : [...S.filtered];
   S.poolIndex = 0;
+  const offset = Math.random() < 0.5 ? 0 : 1;
+  S.flipMap = {};
+  let i = 0;
+  while (i < S.pool.length) {
+    const run = Math.random() < 1 ? 1 : 2;
+    const val = (i + offset) % 2 === 0;
+    for (let j = 0; j < run && i < S.pool.length; j++, i++) S.flipMap[i] = val;
+  }
 }
+
 function currentRow() { return S.pool[S.poolIndex] || null; }
 
 /* ── Card ────────────────────────────────────────────────── */
@@ -254,7 +263,7 @@ function renderCard() {
   S.revealed = false;
   if (!row) { grid.innerHTML = ''; $('empty-state').classList.add('active'); return; }
   $('empty-state').classList.remove('active');
-  const showTarget = S.creatorFlip === true || (S.creatorFlip === 'mix' && Math.random() < 0.5);
+  const showTarget = S.currentFlip !== undefined ? S.currentFlip : S.creatorFlip === true;
   const primary = showTarget ? row.translation : row.english;
   const secondary = showTarget ? row.english : row.translation;
   grid.innerHTML = `
@@ -264,13 +273,14 @@ function renderCard() {
         <span>${row.category}</span>
         <span>${row.language}</span>
       </div>
-      <div class="card-primary" id="card-primary" style="font-size:${S.fontSize}px">${esc(primary)}</div>
+      <div class="card-primary" id="card-primary" style="font-size:${S.fontSize}px"></div>
       <div class="card-secondary hidden" id="card-secondary" style="font-size:${S.fontSize}px">&nbsp;</div>
       <div class="card-hint" id="card-hint">Click to reveal</div>
       <button class="card-tts" id="card-tts-btn" title="Speak">
         <svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
       </button>
     </div>`;
+  scramble($('card-primary'), primary, 400);
   $('main-card').addEventListener('click', e => { if (!e.target.closest('#card-tts-btn')) revealCard(); });
   $('card-tts-btn').addEventListener('click', e => { e.stopPropagation(); speakCurrent(); });
   if (S.presMode) renderPresCard();
@@ -291,13 +301,18 @@ function revealCard() {
 function goNext() {
   if (!S.pool.length) return;
   S.poolIndex = (S.poolIndex + 1) % S.pool.length;
+  if (S.creatorFlip === 'mix' && S.flipMap[S.poolIndex] === undefined)
+    S.flipMap[S.poolIndex] = Math.random() < 0.5;
+  S.currentFlip = S.creatorFlip === 'mix' ? S.flipMap[S.poolIndex] : S.creatorFlip === true;
   renderCard();
 }
 function goPrev() {
   if (!S.pool.length) return;
   S.poolIndex = (S.poolIndex - 1 + S.pool.length) % S.pool.length;
+  S.currentFlip = S.creatorFlip === 'mix' ? (S.flipMap[S.poolIndex] ?? Math.random() < 0.5) : S.creatorFlip === true;
   renderCard();
 }
+
 function esc(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -362,8 +377,9 @@ function exitPres() {
 }
 function renderPresCard() {
   const row = currentRow(); if (!row) return;
-  const primary = S.creatorFlip ? row.translation : row.english;
-  const secondary = S.creatorFlip ? row.english : row.translation;
+  const showTarget = S.currentFlip !== undefined ? S.currentFlip : S.creatorFlip === true;
+  const primary = showTarget ? row.translation : row.english;
+  const secondary = showTarget ? row.english : row.translation;
   const pPrim = $('pres-primary'), pSec = $('pres-secondary');
   $('pres-meta').innerHTML = `
   <div style="display:flex;gap:24px">
@@ -379,6 +395,7 @@ function renderPresCard() {
   pSec.style.fontSize = S.fontSize + 'px';
   $('pres-progress-bar').style.width = ((S.poolIndex + 1) / S.pool.length * 100) + '%';
 }
+
 function presReveal() {
   if (S.presRevealed) return;
   S.presRevealed = true;
