@@ -358,7 +358,9 @@ a, button, [role="button"], .card, .chip, .theme-dot, .toggle, .ctrl-btn, .bar-b
 #topbar-main { display: none; width: 100%; }
 #hamburger-btn { display: none; }
 
-#topbar-drawer { display: contents; }
+@media(min-width:641px) {
+  #topbar-drawer { display: contents; }
+}
 
 
 /* ── Mobile ─────────────────────────────────────────────── */
@@ -371,12 +373,16 @@ a, button, [role="button"], .card, .chip, .theme-dot, .toggle, .ctrl-btn, .bar-b
     flex-direction:column;height:auto;padding:10px 14px;gap:0;align-items:stretch;
   }
   #hamburger-btn{display:flex;}
-  #topbar-drawer{
-    display:none;flex-direction:column;gap:10px;padding-top:10px;
-  }
-  #topbar-drawer.open{display:flex;}
-  #topbar-drawer.open .tb-group:first-child{justify-content:flex-end;}
-  #topbar-drawer.open .tb-group:last-child{justify-content:flex-end;}
+#topbar-drawer {
+  display: flex; flex-direction: column; gap: 10px; padding-top: 0;
+  max-height: 0; opacity: 0; overflow: hidden;
+  transition: opacity 200ms ease, max-height 250ms ease, padding-top 200ms ease;
+}
+#topbar-drawer.open {
+  max-height: 200px; padding-top: 10px; opacity: 1;
+}
+#topbar-drawer .tb-group:first-child{justify-content:flex-end;}
+#topbar-drawer .tb-group:last-child{justify-content:flex-end;}
   .tb-spacer{display:none}
   .tb-group{width:100%;justify-content:flex-start;gap:8px;}
   .tb-group:last-child{justify-content:flex-end;}

@@ -389,6 +389,7 @@ function enterPres() {
   S.presMode = true; S.presRevealed = false;
   $('presentation-mode').classList.add('active');
   $('streamer-btn').classList.add('active');
+  S.currentFlip = S.creatorFlip === 'mix' ? S.flipMap[S.poolIndex] : S.creatorFlip === true;
   renderPresCard();
 }
 function exitPres() {
@@ -421,10 +422,11 @@ function presReveal() {
   if (S.presRevealed) return;
   S.presRevealed = true;
   const row = currentRow(); if (!row) return;
-  const secondary = S.creatorFlip ? row.english : row.translation;
+  const showTarget = S.currentFlip !== undefined ? S.currentFlip : S.creatorFlip === true;
+  const secondary = showTarget ? row.english : row.translation;
   const pSec = $('pres-secondary');
   pSec.classList.remove('hidden');
-  scramble(pSec, secondary, 360, () => { if (S.autoPlay) speak(secondary, row.language); });
+  scramble(pSec, secondary, 360, () => { if (S.autoPlay) speak(row.translation, row.language); });
 }
 function presNext() { goNext(); S.presRevealed = false; renderPresCard(); }
 function presPrev() { goPrev(); S.presRevealed = false; renderPresCard(); }
