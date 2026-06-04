@@ -315,8 +315,6 @@ a, button, [role="button"], .card, .chip, .theme-dot, .toggle, .ctrl-btn, .bar-b
     justify-content:flex-start;
   }
   .bar-sep { display: none; }
-  #filter-bar{gap:8px; flex-direction: column; align-items: flex-start;}
-  #cat-chips { flex-wrap: nowrap; overflow-x: auto; width: 100%; }
   .tb-group:first-child{order:0;width:100%;justify-content:space-between; gap:8px;}
   .tb-spacer{display:none}
   .tb-group:last-child { order: 1; width: 100%; justify-content: flex-end; gap:8px; }
