@@ -14,6 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&family=Fira+Code&family=Inconsolata&family=Geist+Mono&family=Atkinson+Hyperlegible&family=Montserrat&family=Nunito:wght@700&family=Comfortaa&family=Space+Grotesk&family=Itim&family=Coming+Soon&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css"/>
   <link rel="icon" type="image/png" href="favicon.png">
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-F1DKQVV7QF"></script>
@@ -29,6 +30,7 @@
 
 <!-- Custom cursor -->
 <div id="cursor"></div>
+<div id="load-status" class="load-status" style="display:none"></div>
 
 <div id="topbar">
   <a class="logo" href="#">
@@ -49,6 +51,9 @@
       <div class="bar-sep"></div>
       <span class="bar-label">Level</span>
       <div id="level-dropdown" class="custom-select"></div>
+      <div class="bar-sep"></div>
+      <span class="bar-label">SRC</span>
+      <div id="src-dropdown" class="custom-select"></div>
     </div>
     <div class="tb-spacer"></div>
     <div class="tb-group">

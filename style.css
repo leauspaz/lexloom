@@ -362,6 +362,18 @@ a, button, [role="button"], .card, .chip, .theme-dot, .toggle, .ctrl-btn, .bar-b
   #topbar-drawer { display: contents; }
 }
 
+.load-status {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 14px;
+  z-index: 9999;
+}
+
 
 /* ── Mobile ─────────────────────────────────────────────── */
 @media(max-width:640px){
@@ -373,16 +385,23 @@ a, button, [role="button"], .card, .chip, .theme-dot, .toggle, .ctrl-btn, .bar-b
     flex-direction:column;height:auto;padding:10px 14px;gap:0;align-items:stretch;
   }
   #hamburger-btn{display:flex;}
-#topbar-drawer {
-  display: flex; flex-direction: column; gap: 10px; padding-top: 0;
-  max-height: 0; opacity: 0; overflow: hidden;
-  transition: opacity 200ms ease, max-height 250ms ease, padding-top 200ms ease;
-}
-#topbar-drawer.open {
-  max-height: 200px; padding-top: 10px; opacity: 1; overflow: visible;
-}
-#topbar-drawer .tb-group:first-child{justify-content:flex-end;}
-#topbar-drawer .tb-group:last-child{justify-content:flex-end;}
+  #topbar-drawer {
+    display: flex; flex-direction: column; gap: 10px; padding-top: 0;
+    max-height: 0; opacity: 0; overflow: hidden;
+    transition: opacity 200ms ease, max-height 250ms ease, padding-top 200ms ease;
+  }
+  #topbar-drawer.open {
+    max-height: 200px; padding-top: 10px; opacity: 1; overflow: visible;
+  }
+  #topbar-drawer .tb-group:first-child{
+    order: 2;
+    justify-content: flex-end;
+  }
+
+  #topbar-drawer .tb-group:last-child{
+    order: 1;
+    justify-content: flex-end;
+  }
   .tb-spacer{display:none}
   .tb-group{width:100%;justify-content:flex-start;gap:8px;}
   .tb-group:last-child{justify-content:flex-end;}
@@ -397,8 +416,8 @@ a, button, [role="button"], .card, .chip, .theme-dot, .toggle, .ctrl-btn, .bar-b
   #settings-panel{padding:20px 18px;max-height:92vh}
   .color-grid{grid-template-columns:1fr}
   .fs-row{flex-wrap:wrap}
-  .pres-primary{font-size:15px}
-  .pres-secondary{font-size:15px}
+  .pres-primary{font-size:14px}
+  .pres-secondary{font-size:14px}
   #lang-lvl{display:flex;flex-direction:column;}
   #lang-dropdown, #level-dropdown { margin-left: 5.5px; }
   #mute-btn,#streamer-btn,#settings-btn{margin-left:0;}

@@ -1,13 +1,19 @@
 'use strict';
 
 /* ── CSV source ─────────────────────────────────────────── */
-const GDRIVE_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRRfCI2jZaiIncwd9H8Edmgov8VWTKaMAd27my9FgecSF_UuAJAp-vVmM8JZJygpdXUJEV-uK2wdwmL/pub?output=csv';
+/* const GDRIVE_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRRfCI2jZaiIncwd9H8Edmgov8VWTKaMAd27my9FgecSF_UuAJAp-vVmM8JZJygpdXUJEV-uK2wdwmL/pub?output=csv'; */
+const CSV_SOURCES = {
+  'AI-Gen': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRRfCI2jZaiIncwd9H8Edmgov8VWTKaMAd27my9FgecSF_UuAJAp-vVmM8JZJygpdXUJEV-uK2wdwmL/pub?output=csv',
+  'Tatoeba': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRD8fgJcB0Iy2LMjQuRH1pVYeYnqWQu-JBy2eYilqz7EbwPFW99-bL5yaPzHaO2NpEYsKqmAq8H2zLx/pub?output=csv',
+  'Europarl': 'https://YOUR_EUROPARL_URL'
+};
 
 /* ── State ──────────────────────────────────────────────── */
 const S = {
   allRows: [], filtered: [], pool: [], poolIndex: 0,
   languages: [], categories: [],
   lang: 'All', level: 'All', categories_sel: ['All'],
+  source: 'AI-Gen',
   autoPlay: true, presMode: false, presRevealed: false,
   creatorFlip: 'mix', currentFlip: false, flipMap: {}, revealed: false, randomize: true,
   theme: 'latte', fontSize: 22,
@@ -150,48 +156,92 @@ function splitCSV(line) {
   r.push(cur); return r;
 }
 function parseCSV(text) {
-  const lines = text.trim().split(/\r?\n/);
-  const hdr = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/^\uFEFF/, ''));
-  return lines.slice(1).map(l => {
-    const cols = splitCSV(l), row = {};
-    hdr.forEach((h, i) => row[h] = (cols[i] || '').trim().replace(/^"|"$/g, '').trim());
-    return row;
-  }).filter(r => r.language && r.level && r.english && r.translation && r.category);
+  const result = Papa.parse(text, {
+    header: true,
+    skipEmptyLines: true
+  });
+
+  return result.data
+    .map(row => {
+      const clean = {};
+
+      Object.entries(row).forEach(([k, v]) => {
+        const key = String(k)
+          .trim()
+          .toLowerCase()
+          .replace(/^\uFEFF/, '');
+
+        clean[key] = typeof v === 'string'
+          ? v.trim()
+          : v;
+      });
+
+      return clean;
+    })
+    .filter(r =>
+      r.language &&
+      r.level &&
+      r.english &&
+      r.translation &&
+      r.category
+    );
 }
 
 /* ── Load CSV ────────────────────────────────────────────── */
-async function loadDefaultCSV() {
+async function loadCSV(url) {
   try {
-    const res = await fetch(GDRIVE_CSV);
-    if (!res.ok) throw new Error('fetch failed');
-    const text = await res.text();
-    if (text.trim().startsWith('<')) throw new Error('got HTML, not CSV');
-    const rows = parseCSV(text);
-    if (!rows.length) throw new Error('no rows');
-    S.allRows = rows;
-    afterLoad();
-    return;
-  } catch (e) { console.warn('GDrive CSV failed:', e.message); }
+    setLoadStatus(`Downloading ${S.source}...`);
 
-  try {
-    const res = await fetch('./data/sentences.csv');
-    if (!res.ok) throw new Error('local not found');
-    const text = await res.text();
-    const rows = parseCSV(text);
-    if (!rows.length) throw new Error('empty');
-    S.allRows = rows;
-    afterLoad();
-    return;
-  } catch (e) { console.warn('Local CSV failed:', e.message); }
+    const res = await fetch(url);
 
-  $('empty-state').textContent = 'No sentences loaded — upload a CSV using the CSV button.';
-  $('empty-state').classList.add('active');
-  afterLoad();
+    if (!res.ok)
+      throw new Error('fetch failed');
+
+    const text = await res.text();
+
+    if (text.trim().startsWith('<'))
+      throw new Error('got HTML, not CSV');
+
+    setLoadStatus('Parsing rows...');
+
+    // give browser a chance to repaint
+    await new Promise(r => setTimeout(r, 0));
+
+    const rows = parseCSV(text);
+
+    if (!rows.length)
+      throw new Error('no rows');
+
+    S.allRows = rows;
+
+    setLoadStatus(`Loaded ${rows.length.toLocaleString()} cards`);
+
+    afterLoad();
+
+    setTimeout(hideLoadStatus, 2000);
+
+  } catch (e) {
+    setLoadStatus(`Load failed: ${e.message}`);
+    setTimeout(hideLoadStatus, 4000);
+    throw e;
+  }
 }
+
+function setLoadStatus(msg) {
+  const el = $('load-status');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function hideLoadStatus() {
+  $('load-status').style.display = 'none';
+}
+
 
 function afterLoad() {
   buildLangDropdown();
   buildLevelDropdown();
+  buildSrcDropdown();
   buildCategoryChips();
   applyFilters();
   buildPool();
@@ -211,6 +261,29 @@ function buildLevelDropdown() {
   const levels = ['All', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
   makeDropdown('level-dropdown', levels, S.level, val => {
     S.level = val; applyFilters(); buildPool(); renderCard();
+  });
+}
+
+function buildSrcDropdown() {
+  /* const sources = ['AI-Gen', 'Tatoeba', 'Europarl']; */
+  const sources = ['AI-Gen', 'Tatoeba'];
+
+  makeDropdown('src-dropdown', sources, S.source, async val => {
+    if (val === S.source) return;
+
+    S.source = val;
+
+    try {
+      await loadCSV(CSV_SOURCES[val]);
+
+      applyFilters();
+      buildPool();
+      renderCard();
+
+    } catch (err) {
+      console.error(err);
+      alert('Failed to load source');
+    }
   });
 }
 
@@ -730,5 +803,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initCursor();
   initSettingsScroll();
   attachEvents();
-  loadDefaultCSV();
+  loadCSV(CSV_SOURCES[S.source]);
 });
