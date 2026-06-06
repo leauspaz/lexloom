@@ -1,112 +1,217 @@
 # Lexloom
 
-A fast, themeable sentence-based language flashcard app. Built as a cleaner, more feature-rich with a lot of customisation, Good UX, and no dependencies.
+> Sentence-based language learning flashcards — built for learners, streamers, and polyglots.
 
-**Live:** [leauspaz.github.io/lexloom](https://leauspaz.github.io/lexloom)
+[Live Demo](https://leauspaz.github.io/lexloom)
+
+---
+
+## What is Lexloom?
+
+Lexloom is a **browser-based flashcard app** for learning languages through full sentences rather than isolated vocabulary. It pulls from a curated CSV dataset of graded sentences (CEFR A1–C2) and presents them with a sleek, distraction-free interface inspired by terminal aesthetics and mechanical keyboards.
+
+Unlike traditional flashcard apps, Lexloom focuses on **contextual grammar**; every sentence is tagged with grammar topics, sentence types, declensions, verb frames, and inclusion features (separable verbs, two-way prepositions, reflexive verbs, genitive attributes). Hover over any word to see its lemma, part of speech, gender, case, and English meanings.
 
 ---
 
 ## Features
 
-**Flashcard study**
+### Core
 
-- Flip between English and your target language, reveal translations one at a time, and navigate with keyboard shortcuts or on-screen controls.
+- **Sentence-based flashcards** — English on one side, target language on the other (or vice versa, or mixed)
+- **CEFR level filtering** — A1, A2, B1, B2, C1, C2
+- **Multi-dimensional filtering** — by topic, grammar, sentence type, inclusions, adjective declension, or verb frame
+- **Text-to-speech (TTS)** — auto-plays on reveal with configurable voices
+- **Presentation mode** — full-screen study mode with progress bar, designed for streaming or classroom use
+- **Offline caching** — CSV data cached in IndexedDB for instant reloads
+- **Custom CSV upload** — bring your own sentence dataset
 
-**CEFR level filtering**
+### Visual
 
-- Filter cards by A1 through C2 so you study vocabulary appropriate to your level.
+- **36 themes** — 18 dark, 18 light, all hand-picked from the mechanical keyboard community
+- **Custom theme editor** — Ability to tweak every CSS variable live
+- **17 font families**
+- **Adjustable font size**
+- **Custom cursor** — smooth GSAP-powered cursor with hover states (desktop)
+- **Text scramble animation** — cards scramble on load with Greek Alphabets
 
-**Language & category filtering**
+### Word Analysis
 
-- Filter by language and topic category simultaneously; categories are auto-detected from your data.
+- **Hover tooltips** — hover any word to see:
+  - Lemma (dictionary form)
+  - Part of speech (NOUN, VERB) More to be added in the future
+  - Gender (♂ m, ♀ f, ⚲ n)
+  - Grammatical case & tense
+  - Up to 5 English meanings
+- **Visual POS styling** — nouns underlined, verbs dotted, fully customizable
 
-**Text-to-speech**
+### Keyboard Controls
 
-- Hear the target sentence spoken aloud on reveal or on demand. Auto-play on reveal can be toggled.
+| Key | Action |
+|-----|--------|
+| `Space` | Reveal card |
+| `→` | Next card |
+| `←` | Previous card |
+| `S` | Speak (TTS) |
+| `Esc` | Exit presentation mode / close overlays |
 
-**Present Mode**
-
-- A full-screen streamer/classroom view with a progress bar, ideal for projection or live study sessions.
-
-**22 built-in themes**
-
-- 11 dark themes (Terminal, Amber, Arctic, Rose Gold, Obsidian, Dracula, Gruvbox, Catppuccin, Sonokai, Nord, Mocha)
-- 11 light themes (Ivory, Paper, Latte, Gruvbox Light, Solarized, Sepia, Rose Light, Sage, Slate, Sand, Mint)
-- A fully custom theme editor with per-variable colour controls.
-
-**Custom CSV upload**
-
-- Bring your own sentence data.
-- Drop a CSV with the columns `language, level, english, translation, category` and it loads instantly.
-
-**Remappable keyboard shortcuts**
-
-- Reassign Reveal, Next, Previous, and Speak (TTS) to any key.
-
-**Randomise order**
-
-- Toggle random sentence ordering on or off.
-
-**Adjustable font size**
-
-- Preset sizes from 14–30px or a custom px input.
-
----
-
-## CSV Format
-
-Your CSV must have a header row with exactly these columns:
-
-```
-language, level, english, translation, category
-```
-
-| Column        | Values                          |
-|---------------|---------------------------------|
-| `language`    | Any string, e.g. `German`       |
-| `level`       | `A1` `A2` `B1` `B2` `C1` `C2`  |
-| `english`     | The English source sentence     |
-| `translation` | The target-language translation |
-| `category`    | Any string, e.g. `Travel`       |
-
-- Encoding: UTF-8
-- Cells containing commas must be wrapped in double quotes
-
----
-
-## Keyboard Shortcuts (defaults)
-
-| Action  | Key       |
-|---------|-----------|
-| Reveal  | `Space`   |
-| Next    | `→`       |
-| Prev    | `←`       |
-| Speak   | `S`       |
-| Exit    | `Esc`     |
-
-All shortcuts are remappable from Settings.
-
----
-
-## Running Locally
-
-No build step required. Just clone and open:
-
-```bash
-git clone https://github.com/leauspaz/leauspaz.github.io.git
-cd leauspaz.github.io
-# open index.html in your browser, or use any static server:
-npx serve .
-```
+All shortcuts are remappable in Settings.
 
 ---
 
 ## Tech Stack
 
-Pure HTML, CSS, and vanilla JavaScript. No frameworks, no npm, no build tooling. The entire app ships as three files.
+| Layer | Tech |
+|-------|------|
+| Language | Vanilla JavaScript (ES6+) |
+| Styling | CSS custom properties (variables) |
+| CSV Parsing | PapaParse |
+| Animation | GSAP (cursor), CSS transitions (UI) |
+| Storage | IndexedDB (cache), localStorage (settings) |
+| Hosting | GitHub Pages |
 
 ---
 
-## Support
+## CSV Format
 
-If you find this useful: [🍷 Buy Me a Drink!](https://ko-fi.com/leauspaz)
+Lexloom accepts CSV files with the following columns. A header row is required.
+
+### Required
+
+| Column | Description |
+|--------|-------------|
+| `language` | Language name (e.g., `German`, `French`) |
+| `level` | CEFR level: `A1`, `A2`, `B1`, `B2`, `C1`, `C2` |
+| `english` | English sentence |
+| `translation` | Target language sentence |
+| `category` | Topic tag (e.g., `Travel`, `Food`, `Work`) |
+
+### Optional (for enhanced features)
+
+| Column | Description |
+|--------|-------------|
+| `grammar` | Pipe-separated tags: `Passive\|Relative Clause\|Subjunctive` |
+| `sentence_type` | e.g., `statement`, `question`, `imperative` |
+| `word_data` | JSON array of word objects (see below) |
+| `tense` | e.g., `Präsens`, `Perfekt`, `Präteritum` |
+| `has_two_way_prep` | `TRUE` / `FALSE` |
+| `separable_verb` | `TRUE` / `FALSE` |
+| `reflexive_verb` | `TRUE` / `FALSE` |
+| `genitive_attr` | `TRUE` / `FALSE` |
+| `adj_declension` | e.g., `weak_declension`, `strong_declension` |
+| `verb_frame` | e.g., `accusative`, `dative`, `genitive` |
+
+### `word_data` JSON Format
+
+```json
+[
+  {
+    "text": "Häuser",
+    "lemma": "Haus",
+    "pos": "NOUN",
+    "genders": ["n"],
+    "case": "Nominative",
+    "meanings": ["house", "home", "building"]
+  },
+  {
+    "text": "gehen",
+    "lemma": "gehen",
+    "pos": "VERB",
+    "tense": "Präsens",
+    "meanings": ["to go", "to walk", "to leave"]
+  }
+]
+```
+
+---
+
+## Architecture
+
+```
+index.html          — Single-page markup
+style.css           — 36 themes + responsive layout + component styles
+app.js              — State management, CSV loading, filtering, rendering, TTS
+```
+
+### State (`S` object)
+
+All application state lives in a single `S` object:
+
+- `allRows` — raw CSV data
+- `filtered` — after language/level/filter chips
+- `pool` — shuffled (or ordered) study deck
+- `poolIndex` — current card position
+- `filterSelections` — active filter chips per mode
+- `customVars` — user-defined theme colors
+- `wordStyles` — noun/verb decoration preferences
+
+### Data Flow
+
+1. **Load** — CSV fetched from Google Sheets (or uploaded), parsed with PapaParse, cached in IndexedDB
+2. **Filter** — language + level + active filter chips → `filtered`
+3. **Pool** — `filtered` shuffled (or not) → `pool`
+4. **Render** — current row → HTML with word tokenization → scramble animation → card display
+5. **Reveal** — secondary text shown, TTS fires (if enabled), word tooltips attach
+
+---
+
+## Development
+
+No build step. Clone and open `index.html` in a browser, or serve with any static server:
+
+```bash
+git clone https://github.com/leauspaz/lexloom.git
+cd lexloom
+python -m http.server 8000
+# open http://localhost:8000
+```
+
+### Adding a Language
+
+1. Add a CSV source to `CSV_SOURCES` in `app.js`:
+
+   ```js
+   'FR': {
+     url: 'https://docs.google.com/spreadsheets/d/.../pub?output=csv',
+     version: 1
+   }
+   ```
+
+2. Map it in `LANG_SOURCE_MAP`:
+
+   ```js
+   'FR': 'FR'
+   ```
+
+3. The language dropdown will auto-populate from the `language` column in the CSV.
+
+### Adding a Theme
+
+1. Add CSS variables to `style.css` under `[data-theme="your_theme"]`
+2. Add a dot to the Settings panel in `index.html`:
+
+   ```html
+   <span class="theme-dot" data-theme="your_theme" style="background:#hexcolor" title="Your Theme"></span>
+   ```
+
+---
+
+## Browser Support
+
+| Feature | Chrome | Firefox | Safari | Edge |
+|---------|--------|---------|--------|------|
+| Core | ✅ | ✅ | ✅ | ✅ |
+| TTS | ✅ | ✅ | ✅ | ✅ |
+| IndexedDB | ✅ | ✅ | ✅ | ✅ |
+| `color-mix()` | ✅ 111+ | ✅ 88+ | ✅ 16.2+ | ✅ 111+ |
+| Custom cursor | ✅ | ✅ | ✅ | ✅ |
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE)
+
+---
+
+Built with ❤️ by [leauspaz](https://github.com/leauspaz)

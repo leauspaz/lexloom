@@ -1238,6 +1238,13 @@ function syncMuteBtn() {
   $('mute-icon').innerHTML = S.autoPlay ? ICON_ON : ICON_OFF;
   $('mute-btn').classList.toggle('active', !S.autoPlay);
   $('mute-btn').title = S.autoPlay ? 'Auto-play ON' : 'Auto-play OFF';
+  const muteBtnMobile = $('mute-btn-mobile');
+  if (muteBtnMobile) {
+    muteBtnMobile.classList.toggle('active', !S.autoPlay);
+    muteBtnMobile.title = S.autoPlay ? 'Auto-play ON' : 'Auto-play OFF';
+    const mobileIcon = muteBtnMobile.querySelector('svg');
+    if (mobileIcon) mobileIcon.innerHTML = S.autoPlay ? ICON_ON : ICON_OFF;
+  }
 }
 
 /* ── Theme ───────────────────────────────────────────────── */
