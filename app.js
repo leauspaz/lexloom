@@ -1,25 +1,59 @@
-'use strict';
+"use strict";
 
-/* ── CSV source ─────────────────────────────────────────── */
-/* const GDRIVE_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRRfCI2jZaiIncwd9H8Edmgov8VWTKaMAd27my9FgecSF_UuAJAp-vVmM8JZJygpdXUJEV-uK2wdwmL/pub?output=csv'; */
+/* ── CSV Sources ─────────────────────────────────────────── */
 const CSV_SOURCES = {
-  'AI-Gen': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRRfCI2jZaiIncwd9H8Edmgov8VWTKaMAd27my9FgecSF_UuAJAp-vVmM8JZJygpdXUJEV-uK2wdwmL/pub?output=csv',
-  'Tatoeba': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRD8fgJcB0Iy2LMjQuRH1pVYeYnqWQu-JBy2eYilqz7EbwPFW99-bL5yaPzHaO2NpEYsKqmAq8H2zLx/pub?output=csv',
-  'Europarl': 'https://YOUR_EUROPARL_URL'
+  'DE': {
+    url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSN8-Nly4SsV-gUimGWZ2A6BUxO0_WqfBrgoYMXyVNWOYqjGZZB1L_6rLMsbCE9Z9JKwAtyFacksbs7/pub?output=csv',
+    version: 2
+  }
+};
+
+// Language to source mapping for future expansion
+const LANG_SOURCE_MAP = {
+  'DE': 'DE',
+  // 'FR': 'FR', // Add when French source is available
+  // 'ES': 'ES', // Add when Spanish source is available
 };
 
 /* ── State ──────────────────────────────────────────────── */
 const S = {
   allRows: [], filtered: [], pool: [], poolIndex: 0,
   languages: [], categories: [],
-  lang: 'All', level: 'All', categories_sel: ['All'],
-  source: 'AI-Gen',
+  lang: 'DE', level: 'All',
+  source: 'DE',
   autoPlay: true, presMode: false, presRevealed: false,
   creatorFlip: 'mix', currentFlip: false, flipMap: {}, revealed: false, randomize: true,
-  theme: 'latte', fontSize: 22,
+  theme: 'hammerhead', fontSize: 22,
   keyReveal: ' ', keyNext: 'ArrowRight', keyPrev: 'ArrowLeft', keyTTS: 's',
   customVars: {}, ttsVoice: '',
+  wordStyles: { NOUN: 'underline', VERB: 'dotted' },
+  // New filter state
+  filterMode: 'topic',
+  filterSelections: {
+    topic: ['All'],
+    grammar: ['All'],
+    sentence_type: ['All'],
+    inclusions: ['All'],
+    adj_declension: ['All'],
+    verb_frame: ['All']
+  }
 };
+
+const FILTER_MODES = [
+  { key: 'topic', label: 'Topic' },
+  { key: 'grammar', label: 'Grammar' },
+  { key: 'sentence_type', label: 'Sentence Type' },
+  { key: 'inclusions', label: 'Inclusions' },
+  { key: 'adj_declension', label: 'Adj. Declension' },
+  { key: 'verb_frame', label: 'Verb Frame' }
+];
+
+const INCLUSION_OPTIONS = [
+  { key: 'has_two_way_prep', label: 'Two-way Preposition' },
+  { key: 'separable_verb', label: 'Separable Verb' },
+  { key: 'reflexive_verb', label: 'Reflexive Verb' },
+  { key: 'genitive_attr', label: 'Genitive Attribute' }
+];
 
 const COLOR_VARS = [
   { key: '--bg', label: 'Background' },
@@ -42,7 +76,6 @@ $('hamburger-btn').addEventListener('click', () => {
   $('topbar-drawer').classList.toggle('open');
 });
 
-
 $$('#font-btns .font-btn').forEach(b => b.addEventListener('click', () => {
   S.fontFamily = b.dataset.font;
   $$('#font-btns .font-btn').forEach(x => x.classList.remove('active'));
@@ -56,7 +89,6 @@ $$('#font-btns .font-btn').forEach(b => b.addEventListener('click', () => {
   }
   saveSettings();
 }));
-
 
 /* ── Cursor (GSAP) ──────────────────────────────────────── */
 function initCursor() {
@@ -84,6 +116,7 @@ function initSettingsScroll() {
 /* ── Custom dropdowns ───────────────────────────────────── */
 function makeDropdown(containerId, options, current, onChange) {
   const wrap = $(containerId);
+  if (!wrap) return;
   wrap.innerHTML = '';
 
   const btn = document.createElement('div');
@@ -112,7 +145,6 @@ function makeDropdown(containerId, options, current, onChange) {
   btn.addEventListener('click', e => {
     e.stopPropagation();
     const isOpen = list.classList.contains('open');
-    // close all open dropdowns first
     $$('.custom-select-list.open').forEach(l => l.classList.remove('open'));
     $$('.custom-select-btn.open').forEach(b => b.classList.remove('open'));
     if (!isOpen) { list.classList.add('open'); btn.classList.add('open'); }
@@ -145,6 +177,55 @@ function scramble(el, text, ms, cb) {
   });
 }
 
+/* ── IndexedDB Cache ─────────────────────────────────────── */
+const DB_NAME = 'lexloom_cache';
+const DB_VERSION = 1;
+const STORE_NAME = 'csv_cache';
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => resolve(req.result);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: 'source' });
+      }
+    };
+  });
+}
+
+async function getCachedCSV(source) {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.get(source);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) {
+    return null;
+  }
+}
+
+async function setCachedCSV(source, text, version) {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.put({ source, text, version, timestamp: Date.now() });
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) {
+    console.error('Cache save failed:', e);
+  }
+}
+
 /* ── CSV ─────────────────────────────────────────────────── */
 function splitCSV(line) {
   const r = []; let cur = '', q = false;
@@ -155,6 +236,7 @@ function splitCSV(line) {
   }
   r.push(cur); return r;
 }
+
 function parseCSV(text) {
   const result = Papa.parse(text, {
     header: true,
@@ -164,60 +246,126 @@ function parseCSV(text) {
   return result.data
     .map(row => {
       const clean = {};
-
       Object.entries(row).forEach(([k, v]) => {
         const key = String(k)
           .trim()
           .toLowerCase()
           .replace(/^\uFEFF/, '');
-
-        clean[key] = typeof v === 'string'
-          ? v.trim()
-          : v;
+        clean[key] = typeof v === 'string' ? v.trim() : v;
       });
-
       return clean;
     })
-    .filter(r =>
-      r.language &&
-      r.level &&
-      r.english &&
-      r.translation &&
-      r.category
-    );
+    .filter(r => r.language && r.level && r.english && r.translation && r.category);
 }
 
-/* ── Load CSV ────────────────────────────────────────────── */
-async function loadCSV(url) {
+/* ── Load CSV with XMLHttpRequest for progress ──────────── */
+function loadCSVWithProgress(url, source, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+
+    let dotCount = 0;
+    let dotInterval = null;
+
+    function startDotAnimation(baseMsg) {
+      if (dotInterval) clearInterval(dotInterval);
+      dotInterval = setInterval(() => {
+        dotCount = (dotCount + 1) % 10;
+        const dots = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'][dotCount];
+        onProgress(baseMsg + ' ' + dots);
+      }, 80);
+    }
+
+    function stopDotAnimation() {
+      if (dotInterval) {
+        clearInterval(dotInterval);
+        dotInterval = null;
+      }
+    }
+
+    xhr.onloadstart = () => {
+      startDotAnimation('Downloading Lexloom ' + source);
+    };
+
+    xhr.onload = () => {
+      stopDotAnimation();
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(xhr.responseText);
+      } else {
+        reject(new Error(`HTTP ${xhr.status}`));
+      }
+    };
+
+    xhr.onerror = () => {
+      stopDotAnimation();
+      reject(new Error('Network error'));
+    };
+    xhr.ontimeout = () => {
+      stopDotAnimation();
+      reject(new Error('Timeout'));
+    };
+
+    xhr.send();
+  });
+}
+
+async function loadCSV(url, source) {
   try {
-    setLoadStatus(`Downloading ${S.source}...`);
+    const sourceConfig = CSV_SOURCES[source];
+    const currentVersion = sourceConfig ? sourceConfig.version : 1;
 
-    const res = await fetch(url);
+    // Check cache first
+    setLoadStatus(`Checking cache for ${source}...`);
+    const cached = await getCachedCSV(source);
 
-    if (!res.ok)
-      throw new Error('fetch failed');
+    if (cached && cached.version === currentVersion) {
+      let cacheDotCount = 0;
+      const cacheSpinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+      let cacheDotInterval = setInterval(() => {
+        cacheDotCount = (cacheDotCount + 1) % cacheSpinner.length;
+        setLoadStatus('Loading Lexloom ' + source + ' from cache ' + cacheSpinner[cacheDotCount]);
+      }, 80);
+      await new Promise(r => setTimeout(r, 0));
 
-    const text = await res.text();
+      const rows = parseCSV(cached.text);
+      clearInterval(cacheDotInterval);
+      if (!rows.length) throw new Error('no rows in cached data');
 
-    if (text.trim().startsWith('<'))
-      throw new Error('got HTML, not CSV');
+      S.allRows = rows;
+      setLoadStatus(`Loaded ${rows.length.toLocaleString()} cards from cache`);
+      afterLoad();
+      setTimeout(hideLoadStatus, 2000);
+      return;
+    }
 
-    setLoadStatus('Parsing rows...');
+    // Download with progress
+    const text = await loadCSVWithProgress(url, source, msg => {
+      setLoadStatus(msg);
+    });
 
-    // give browser a chance to repaint
-    await new Promise(r => setTimeout(r, 0));
+    if (text.trim().startsWith('<')) throw new Error('got HTML, not CSV');
+
+    let parseDotCount = 0;
+    const spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+    let parseDotInterval = setInterval(() => {
+      parseDotCount = (parseDotCount + 1) % spinner.length;
+      setLoadStatus('Parsing rows ' + spinner[parseDotCount]);
+    }, 80);
+
+    // Give browser time to show spinner before synchronous parsing
+    await new Promise(r => setTimeout(r, 200));
 
     const rows = parseCSV(text);
+    if (!rows.length) throw new Error('no rows');
 
-    if (!rows.length)
-      throw new Error('no rows');
+    // Keep spinner visible briefly after parsing
+    await new Promise(r => setTimeout(r, 300));
+    if (parseDotInterval) clearInterval(parseDotInterval);
+    await setCachedCSV(source, text, currentVersion);
 
     S.allRows = rows;
-
     setLoadStatus(`Loaded ${rows.length.toLocaleString()} cards`);
-
     afterLoad();
-
     setTimeout(hideLoadStatus, 2000);
 
   } catch (e) {
@@ -237,24 +385,65 @@ function hideLoadStatus() {
   $('load-status').style.display = 'none';
 }
 
-
 function afterLoad() {
   buildLangDropdown();
   buildLevelDropdown();
-  buildSrcDropdown();
-  buildCategoryChips();
+  buildFilterModeDropdown();
   applyFilters();
+  buildFilterChips();
   buildPool();
   renderCard();
 }
 
+/* ── Language handling ──────────────────────────────────── */
+async function handleLanguageChange(newLang) {
+  const oldLang = S.lang;
+  S.lang = newLang;
+
+  // Check if we need to load a different source
+  const newSource = LANG_SOURCE_MAP[newLang];
+
+  if (newSource && newSource !== S.source && CSV_SOURCES[newSource]) {
+    // Need to load new source for this language
+    S.source = newSource;
+    try {
+      await loadCSV(CSV_SOURCES[newSource].url, newSource);
+      // After loading, apply the language filter
+      applyFilters();
+      buildPool();
+      renderCard();
+    } catch (err) {
+      console.error(err);
+      S.lang = oldLang; // Revert on failure
+      S.source = LANG_SOURCE_MAP[oldLang] || S.source;
+      alert('Failed to load source for ' + newLang);
+    }
+  } else {
+    // Same source, just filter
+    applyFilters();
+    buildPool();
+    renderCard();
+  }
+
+  $('flip-label').textContent = getFlipLabel();
+  saveSettings();
+}
+
 /* ── Filters ─────────────────────────────────────────────── */
 function buildLangDropdown() {
-  S.languages = ['All', ...new Set(S.allRows.map(r => r.language))];
-  makeDropdown('lang-dropdown', S.languages, S.lang, val => {
-    S.lang = val; applyFilters(); buildPool(); renderCard();
-    $('flip-label').textContent = getFlipLabel();
+  const langs = ['All', ...new Set(S.allRows.map(r => r.language))].filter(Boolean);
+  const options = langs.length === 1 ? langs : langs;
+  const current = S.lang;
+  makeDropdown('lang-dropdown', options, current, val => {
+    handleLanguageChange(val);
   });
+  // Mobile version
+  const mobileLang = $('lang-dropdown-mobile');
+  if (mobileLang) {
+    makeDropdown('lang-dropdown-mobile', options, current, val => {
+      handleLanguageChange(val);
+    });
+  }
 }
 
 function buildLevelDropdown() {
@@ -262,71 +451,293 @@ function buildLevelDropdown() {
   makeDropdown('level-dropdown', levels, S.level, val => {
     S.level = val; applyFilters(); buildPool(); renderCard();
   });
+  // Mobile version
+  const mobileLevel = $('level-dropdown-mobile');
+  if (mobileLevel) {
+    makeDropdown('level-dropdown-mobile', levels, S.level, val => {
+      S.level = val; applyFilters(); buildPool(); renderCard();
+    });
+  }
 }
 
-function buildSrcDropdown() {
-  /* const sources = ['AI-Gen', 'Tatoeba', 'Europarl']; */
-  const sources = ['AI-Gen', 'Tatoeba'];
-
-  makeDropdown('src-dropdown', sources, S.source, async val => {
-    if (val === S.source) return;
-
-    S.source = val;
-
-    try {
-      await loadCSV(CSV_SOURCES[val]);
-
-      applyFilters();
-      buildPool();
-      renderCard();
-
-    } catch (err) {
-      console.error(err);
-      alert('Failed to load source');
-    }
+/* ── Filter Mode Dropdown ───────────────────────────────── */
+function buildFilterModeDropdown() {
+  const options = FILTER_MODES.map(m => m.label);
+  const current = FILTER_MODES.find(m => m.key === S.filterMode)?.label || 'Topic';
+  makeDropdown('filter-mode-dropdown', options, current, val => {
+    const mode = FILTER_MODES.find(m => m.label === val)?.key || 'topic';
+    S.filterMode = mode;
+    buildFilterChips();
+    applyFilters();
+    buildPool();
+    renderCard();
   });
 }
 
-function buildCategoryChips() {
-  S.categories = [...new Set(S.allRows.map(r => r.category))].filter(Boolean).sort();
+/* ── Clear All Filters ──────────────────────────────────── */
+function clearAllFilters() {
+  S.filterSelections = {
+    topic: ['All'],
+    grammar: ['All'],
+    sentence_type: ['All'],
+    inclusions: ['All'],
+    adj_declension: ['All'],
+    verb_frame: ['All']
+  };
+  // Don't reset language, only reset level
+  S.level = 'All';
+  buildLevelDropdown();
+  buildFilterChips();
+  applyFilters();
+  buildPool();
+  renderCard();
+  saveSettings();
+}
+
+/* ── Filter Chips ───────────────────────────────────────── */
+function getFilterValues(mode) {
+  switch (mode) {
+    case 'topic':
+      return [...new Set(S.allRows.map(r => r.category))].filter(Boolean).sort();
+    case 'grammar':
+      return [...new Set(S.allRows.map(r => r.grammar).filter(Boolean)
+        .flatMap(g => g.split('|').map(s => s.trim()))
+      )].sort();
+    case 'sentence_type':
+      return [...new Set(S.allRows.map(r => r.sentence_type))].filter(Boolean)
+        .map(v => capitalizeWords(v)).sort();
+    case 'inclusions':
+      return INCLUSION_OPTIONS.map(o => o.label);
+    case 'adj_declension':
+      return [...new Set(S.allRows.map(r => r.adj_declension))].filter(Boolean)
+        .map(v => capitalizeWords(v.replace(/_/g, ' '))).sort();
+    case 'verb_frame':
+      return [...new Set(S.allRows.map(r => r.verb_frame))].filter(Boolean)
+        .map(v => capitalizeWords(v.replace(/_/g, ' '))).sort();
+    default:
+      return [];
+  }
+}
+
+function capitalizeWords(str) {
+  if (!str) return '';
+  return str.split(/[\s_-]+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+}
+
+function buildFilterChips() {
+  const mode = S.filterMode;
+  const values = getFilterValues(mode);
   const bar = $('cat-chips');
-  bar.innerHTML = `<button class="chip active" data-cat="All">All</button>`;
-  S.categories.forEach(cat => {
-    const b = document.createElement('button');
-    b.className = 'chip'; b.dataset.cat = cat; b.textContent = cat;
-    bar.appendChild(b);
+  const currentSelections = S.filterSelections[mode];
+
+  let html = `<button class="chip ${currentSelections.includes('All') ? 'active' : ''}" data-val="All">All</button>`;
+
+  values.forEach(val => {
+    if (!val) return;
+    const isActive = currentSelections.includes(val);
+    html += `<button class="chip ${isActive ? 'active' : ''}" data-val="${esc(val)}">${esc(val)}</button>`;
   });
+
+  bar.innerHTML = html;
+
   bar.querySelectorAll('.chip').forEach(b => b.addEventListener('click', () => {
-    const cat = b.dataset.cat;
-    if (cat === 'All') { S.categories_sel = ['All']; }
-    else {
-      S.categories_sel = S.categories_sel.filter(c => c !== 'All');
-      if (S.categories_sel.includes(cat))
-        S.categories_sel = S.categories_sel.filter(c => c !== cat);
-      else S.categories_sel.push(cat);
-      if (!S.categories_sel.length) S.categories_sel = ['All'];
+    const val = b.dataset.val;
+    const sel = S.filterSelections[mode];
+
+    if (val === 'All') {
+      S.filterSelections[mode] = ['All'];
+    } else {
+      S.filterSelections[mode] = sel.filter(c => c !== 'All');
+      if (S.filterSelections[mode].includes(val)) {
+        S.filterSelections[mode] = S.filterSelections[mode].filter(c => c !== val);
+      } else {
+        S.filterSelections[mode].push(val);
+      }
+      if (!S.filterSelections[mode].length) S.filterSelections[mode] = ['All'];
     }
-    syncChips(); applyFilters(); buildPool(); renderCard();
+
+    syncFilterChips();
+    applyFilters();
+    buildPool();
+    renderCard();
   }));
+
+  updateActiveFiltersSummary();
+  updateClearButton();
 }
 
-function syncChips() {
-  $$('#cat-chips .chip').forEach(b =>
-    b.classList.toggle('active',
-      S.categories_sel.includes('All') ? b.dataset.cat === 'All' : S.categories_sel.includes(b.dataset.cat))
-  );
+function syncFilterChips() {
+  const mode = S.filterMode;
+  const sel = S.filterSelections[mode];
+  $$('#cat-chips .chip').forEach(b => {
+    const val = b.dataset.val;
+    const isActive = sel.includes('All') ? val === 'All' : sel.includes(val);
+    b.classList.toggle('active', isActive);
+  });
+  updateActiveFiltersSummary();
+  updateClearButton();
+}
+
+function updateClearButton() {
+  const wrap = $('filter-mode-wrap');
+  if (!wrap) return;
+
+  let btn = $('clear-filters-btn');
+  const hasFilters = Object.values(S.filterSelections).some(sel => !sel.includes('All')) || S.level !== 'All';
+
+  if (hasFilters) {
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.id = 'clear-filters-btn';
+      btn.className = 'clear-filters-btn';
+      btn.textContent = '✕ Clear';
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        clearAllFilters();
+      });
+      wrap.appendChild(btn);
+    }
+    btn.style.display = 'inline-flex';
+  } else if (btn) {
+    btn.style.display = 'none';
+  }
+}
+
+function updateActiveFiltersSummary() {
+  const summary = $('active-filters-summary');
+  if (!summary) return;
+
+  const activeFilters = [];
+
+  if (S.level !== 'All') activeFilters.push(`Level: ${S.level}`);
+
+  Object.entries(S.filterSelections).forEach(([mode, vals]) => {
+    if (!vals.includes('All')) {
+      const modeLabel = FILTER_MODES.find(m => m.key === mode)?.label || mode;
+      vals.forEach(v => activeFilters.push(`${modeLabel}: ${v}`));
+    }
+  });
+
+  if (activeFilters.length === 0) {
+    summary.innerHTML = '';
+  } else {
+    summary.innerHTML = activeFilters.map(f => `<span class="active-filter-tag">${f}</span>`).join('');
+  }
 }
 
 function applyFilters() {
   let r = S.allRows;
+
+  // Language filter
   if (S.lang !== 'All') r = r.filter(x => x.language === S.lang);
+
+  // Level filter
   if (S.level !== 'All') r = r.filter(x => x.level === S.level);
-  if (!S.categories_sel.includes('All'))
-    r = r.filter(x => S.categories_sel.includes(x.category));
+
+  // Topic filter (was category)
+  if (!S.filterSelections.topic.includes('All')) {
+    r = r.filter(x => S.filterSelections.topic.includes(x.category));
+  }
+
+  // Grammar filter
+  if (!S.filterSelections.grammar.includes('All')) {
+    r = r.filter(x => {
+      if (!x.grammar) return false;
+      const grammars = x.grammar.split('|').map(s => s.trim());
+      return S.filterSelections.grammar.some(g => grammars.includes(g));
+    });
+  }
+
+  // Sentence type filter
+  if (!S.filterSelections.sentence_type.includes('All')) {
+    r = r.filter(x => {
+      const val = capitalizeWords(x.sentence_type || '');
+      return S.filterSelections.sentence_type.includes(val);
+    });
+  }
+
+  // Inclusions filter (boolean columns)
+  if (!S.filterSelections.inclusions.includes('All')) {
+    r = r.filter(x => {
+      return S.filterSelections.inclusions.some(incLabel => {
+        const option = INCLUSION_OPTIONS.find(o => o.label === incLabel);
+        if (!option) return false;
+        const val = x[option.key];
+        const strVal = String(val).toLowerCase().trim();
+        return strVal === 'true' || strVal === '1' || strVal === 'yes';
+      });
+    });
+  }
+
+  // Adjective declension filter
+  if (!S.filterSelections.adj_declension.includes('All')) {
+    r = r.filter(x => {
+      const val = capitalizeWords((x.adj_declension || '').replace(/_/g, ' '));
+      return S.filterSelections.adj_declension.includes(val);
+    });
+  }
+
+  // Verb frame filter
+  if (!S.filterSelections.verb_frame.includes('All')) {
+    r = r.filter(x => {
+      const val = capitalizeWords((x.verb_frame || '').replace(/_/g, ' '));
+      return S.filterSelections.verb_frame.includes(val);
+    });
+  }
+
   S.filtered = r;
-  $('stats-text').innerHTML = S.filtered.length
-    ? `<span>${S.filtered.length}</span> sentences &nbsp;·&nbsp; <span>${new Set(S.filtered.map(r => r.category)).size}</span> categories`
-    : '';
+  updateStats();
+}
+
+function updateStats() {
+  const statsEl = $('stats-text');
+  if (!statsEl) return;
+
+  if (!S.filtered.length) {
+    statsEl.innerHTML = '';
+    return;
+  }
+
+  const filtersAreActive = Object.values(S.filterSelections).some(sel => !sel.includes('All')) || S.level !== 'All' || S.lang !== 'All';
+  const mode = S.filterMode;
+
+  // Always show available count for the current filter mode (total unique values)
+  let uniqueCount = 0;
+  let label = 'Topics';
+
+  switch (mode) {
+    case 'topic':
+      uniqueCount = new Set(S.allRows.map(r => r.category)).size;
+      label = 'Topics';
+      break;
+    case 'grammar':
+      uniqueCount = new Set(S.allRows.map(r => r.grammar).filter(Boolean)
+        .flatMap(g => g.split('|').map(s => s.trim()))).size;
+      label = 'Grammar Types';
+      break;
+    case 'sentence_type':
+      uniqueCount = new Set(S.allRows.map(r => r.sentence_type)).size;
+      label = 'Sentence Types';
+      break;
+    case 'inclusions':
+      uniqueCount = INCLUSION_OPTIONS.length;
+      label = 'Inclusions';
+      break;
+    case 'adj_declension':
+      uniqueCount = new Set(S.allRows.map(r => r.adj_declension)).size;
+      label = 'Declensions';
+      break;
+    case 'verb_frame':
+      uniqueCount = new Set(S.allRows.map(r => r.verb_frame)).size;
+      label = 'Verb Frames';
+      break;
+  }
+
+  if (filtersAreActive) {
+    statsEl.innerHTML = `<span>${S.filtered.length.toLocaleString()}</span> Sentences Selected &nbsp;·&nbsp; <span>${uniqueCount}</span> ${label} Available`;
+  } else {
+    statsEl.innerHTML = `<span>${S.filtered.length.toLocaleString()}</span> Sentences &nbsp;·&nbsp; <span>${uniqueCount}</span> ${label} Available`;
+  }
 }
 
 /* ── Pool ────────────────────────────────────────────────── */
@@ -350,21 +761,277 @@ function buildPool() {
 
 function currentRow() { return S.pool[S.poolIndex] || null; }
 
+/* ── Word Data Parsing ───────────────────────────────────── */
+function parseWordData(row) {
+  if (!row.word_data) return [];
+  try {
+    const data = JSON.parse(row.word_data);
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function getWordStyleClass(pos) {
+  const style = S.wordStyles[pos] || '';
+  if (!style) return '';
+  return `word-${style}`;
+}
+
+// Build a comprehensive word map with multiple matching strategies
+function buildWordMap(wordData) {
+  const map = new Map();
+
+  wordData.forEach(wd => {
+    const lemma = (wd.lemma || wd.text || '').toLowerCase().trim();
+    const text = (wd.text || '').toLowerCase().trim();
+    if (!lemma && !text) return;
+
+    const forms = new Set();
+
+    if (lemma) forms.add(lemma);
+    if (text) forms.add(text);
+
+    // German-specific: handle common inflections
+    if (lemma) {
+      forms.add(lemma);
+
+      const stem = lemma
+        .replace(/en$/, '')
+        .replace(/n$/, '')
+        .replace(/e$/, '')
+        .replace(/er$/, '')
+        .replace(/es$/, '')
+        .replace(/em$/, '')
+        .replace(/t$/, '')
+        .replace(/st$/, '')
+        .replace(/te$/, '')
+        .replace(/test$/, '')
+        .replace(/ten$/, '')
+        .replace(/tet$/, '')
+        .replace(/et$/, '')
+        .replace(/est$/, '')
+        .replace(/ete$/, '')
+        .replace(/etet$/, '')
+        .replace(/e$/, '')
+        .replace(/t$/, '')
+        .replace(/st$/, '')
+        .replace(/e$/, '');
+
+      if (stem && stem.length >= 2 && stem !== lemma) {
+        forms.add(stem);
+      }
+    }
+
+    // Also add without umlauts for broader matching
+    forms.forEach(form => {
+      const normalized = form
+        .replace(/ä/g, 'a')
+        .replace(/ö/g, 'o')
+        .replace(/ü/g, 'u')
+        .replace(/ß/g, 'ss');
+      if (normalized !== form) forms.add(normalized);
+    });
+
+    // Store all forms pointing to this word data
+    forms.forEach(form => {
+      if (form.length >= 2) {
+        map.set(form, wd);
+      }
+    });
+  });
+
+  return map;
+}
+
+function buildWordHTML(text, wordData) {
+  if (!wordData || !wordData.length) return esc(text);
+
+  const wordMap = buildWordMap(wordData);
+
+  // Split text into words and punctuation - keep delimiters
+  const tokens = text.split(/(\s+|[.,!?;:"'()\-])/);
+
+  return tokens.map(token => {
+    if (!token.trim()) return esc(token);
+
+    // Clean token for matching - remove punctuation and normalize
+    const cleanToken = token.toLowerCase()
+      .replace(/[^a-zäöüßáéíóúñç]/gi, '');
+
+    if (!cleanToken) return esc(token);
+
+    // Try exact match first
+    let wordInfo = wordMap.get(cleanToken);
+
+    // Try stem match (remove common endings)
+    if (!wordInfo) {
+      const stem = cleanToken
+        .replace(/en$/, '')
+        .replace(/n$/, '')
+        .replace(/e$/, '')
+        .replace(/er$/, '')
+        .replace(/es$/, '')
+        .replace(/em$/, '')
+        .replace(/t$/, '')
+        .replace(/st$/, '')
+        .replace(/te$/, '')
+        .replace(/test$/, '')
+        .replace(/ten$/, '')
+        .replace(/tet$/, '')
+        .replace(/et$/, '')
+        .replace(/est$/, '')
+        .replace(/ete$/, '')
+        .replace(/etet$/, '')
+        .replace(/e$/, '');
+
+      if (stem && stem.length >= 2) {
+        wordInfo = wordMap.get(stem);
+      }
+    }
+
+    // Try without umlauts
+    if (!wordInfo) {
+      const normalized = cleanToken
+        .replace(/ä/g, 'a')
+        .replace(/ö/g, 'o')
+        .replace(/ü/g, 'u')
+        .replace(/ß/g, 'ss');
+      wordInfo = wordMap.get(normalized);
+    }
+
+    if (wordInfo) {
+      const pos = wordInfo.pos || '';
+      const styleClass = getWordStyleClass(pos);
+      const tooltipData = JSON.stringify(wordInfo).replace(/"/g, '&quot;');
+      return `<span class="word-token ${styleClass}" data-word="${tooltipData}">${esc(token)}</span>`;
+    }
+
+    return esc(token);
+  }).join('');
+}
+
+function attachWordHoverEvents(container) {
+  if (!container) return;
+  container.querySelectorAll('.word-token').forEach(token => {
+    token.addEventListener('mouseenter', e => {
+      try {
+        const data = JSON.parse(token.dataset.word);
+        showWordTooltip(e, data);
+      } catch (err) { }
+    });
+    token.addEventListener('mouseleave', hideWordTooltip);
+  });
+}
+
+function showWordTooltip(e, wordData) {
+  const tooltip = $('word-tooltip');
+  if (!tooltip || !wordData) return;
+
+  let content = '';
+
+  if (wordData.pos === 'NOUN') {
+    const genders = wordData.genders || [];
+    const genderStr = genders.map(g => {
+      const map = { m: '♂ m', f: '♀ f', n: '⚲ n' };
+      return map[g] || g;
+    }).join(', ');
+
+    const meanings = (wordData.meanings || []).slice(0, 5);
+    const caseStr = wordData.case ? `<div class="tt-case">Case: ${wordData.case}</div>` : '';
+
+    content = `
+      <div class="tt-header">
+        <span class="tt-pos noun">NOUN</span>
+        ${genderStr ? `<span class="tt-gender">${genderStr}</span>` : ''}
+      </div>
+      <div class="tt-lemma">${esc(wordData.lemma || wordData.text)}</div>
+      ${caseStr}
+      <div class="tt-meanings">
+        ${meanings.map((m, i) => `<div class="tt-meaning">${i + 1}. ${esc(m)}</div>`).join('')}
+      </div>
+    `;
+  } else if (wordData.pos === 'VERB') {
+    const meanings = (wordData.meanings || []).slice(0, 5);
+    const tense = wordData.tense ? `<div class="tt-tense">Tense: ${esc(wordData.tense)}</div>` : '';
+
+    content = `
+      <div class="tt-header">
+        <span class="tt-pos verb">VERB</span>
+      </div>
+      <div class="tt-lemma">${esc(wordData.lemma || wordData.text)}</div>
+      ${tense}
+      <div class="tt-meanings">
+        ${meanings.map((m, i) => `<div class="tt-meaning">${i + 1}. ${esc(m)}</div>`).join('')}
+      </div>
+    `;
+  } else {
+    const meanings = (wordData.meanings || []).slice(0, 5);
+    content = `
+      <div class="tt-header">
+        <span class="tt-pos">${esc(wordData.pos || 'WORD')}</span>
+      </div>
+      <div class="tt-lemma">${esc(wordData.lemma || wordData.text)}</div>
+      <div class="tt-meanings">
+        ${meanings.map((m, i) => `<div class="tt-meaning">${i + 1}. ${esc(m)}</div>`).join('')}
+      </div>
+    `;
+  }
+
+  tooltip.innerHTML = content;
+  tooltip.classList.add('active');
+
+  // Position tooltip with viewport awareness
+  requestAnimationFrame(() => {
+    const rect = e.target.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+
+    let left = rect.left;
+    let top = rect.bottom + 8;
+
+    // Keep tooltip within viewport horizontally
+    if (left + tooltipRect.width > window.innerWidth - 10) {
+      left = window.innerWidth - tooltipRect.width - 10;
+    }
+    if (left < 10) left = 10;
+
+    // If tooltip goes below viewport, show above instead
+    if (top + tooltipRect.height > window.innerHeight - 10) {
+      top = rect.top - tooltipRect.height - 8;
+    }
+    if (top < 10) top = rect.bottom + 8;
+
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+  });
+}
+
+function hideWordTooltip() {
+  const tooltip = $('word-tooltip');
+  if (tooltip) tooltip.classList.remove('active');
+}
+
 /* ── Card ────────────────────────────────────────────────── */
 function renderCard() {
   const row = currentRow(), grid = $('cards-grid');
   S.revealed = false;
   if (!row) { grid.innerHTML = ''; $('empty-state').classList.add('active'); return; }
   $('empty-state').classList.remove('active');
+
   const showTarget = S.currentFlip !== undefined ? S.currentFlip : S.creatorFlip === true;
   const primary = showTarget ? row.translation : row.english;
   const secondary = showTarget ? row.english : row.translation;
+
+  const wordData = parseWordData(row);
+  const primaryHTML = buildWordHTML(primary, wordData);
+  const secondaryHTML = buildWordHTML(secondary, wordData);
+
   grid.innerHTML = `
     <div class="card" id="main-card">
       <div class="card-meta">
-        <span class="card-level">${row.level}</span>
-        <span>${row.category}</span>
-        <span>${row.language}</span>
+        <span class="card-level">${esc(row.level)}</span>
+        <span>${esc(row.category)}</span>
+        <span>${esc(row.language)}</span>
       </div>
       <div class="card-primary" id="card-primary" style="font-size:${S.fontSize}px"></div>
       <div class="card-secondary hidden" id="card-secondary" style="font-size:${S.fontSize}px">&nbsp;</div>
@@ -373,7 +1040,23 @@ function renderCard() {
         <svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
       </button>
     </div>`;
-  scramble($('card-primary'), primary, 400);
+
+  // Set the HTML content with word tokens
+  const cardPrimary = $('card-primary');
+  const cardSecondary = $('card-secondary');
+
+  cardPrimary.innerHTML = primaryHTML;
+  attachWordHoverEvents(cardPrimary);
+
+  // Store secondary HTML for reveal
+  cardSecondary.dataset.html = secondaryHTML;
+
+  // Scramble the primary text (plain text, then restore HTML)
+  scramble(cardPrimary, primary, 400, () => {
+    cardPrimary.innerHTML = primaryHTML;
+    attachWordHoverEvents(cardPrimary);
+  });
+
   $('main-card').addEventListener('click', e => { if (!e.target.closest('#card-tts-btn')) revealCard(); });
   $('card-tts-btn').addEventListener('click', e => { e.stopPropagation(); speakCurrent(); });
   if (S.presMode) renderPresCard();
@@ -385,9 +1068,20 @@ function revealCard() {
   const row = currentRow(); if (!row) return;
   const showTarget = S.currentFlip !== undefined ? S.currentFlip : S.creatorFlip === true;
   const secondary = showTarget ? row.english : row.translation;
+  const secondaryHTML = $('card-secondary').dataset.html || esc(secondary);
+
   const sec = $('card-secondary');
   sec.classList.remove('hidden');
-  scramble(sec, secondary, 360, () => { if (S.autoPlay) speak(row.translation, row.language); });
+  sec.innerHTML = secondaryHTML;
+
+  // Attach hover events to revealed text
+  attachWordHoverEvents(sec);
+
+  scramble(sec, secondary, 360, () => {
+    sec.innerHTML = secondaryHTML;
+    attachWordHoverEvents(sec);
+    if (S.autoPlay) speak(row.translation, row.language);
+  });
   $('main-card').classList.add('revealed');
   $('card-hint').textContent = '';
 }
@@ -462,6 +1156,7 @@ function enterPres() {
   S.presMode = true; S.presRevealed = false;
   $('presentation-mode').classList.add('active');
   $('streamer-btn').classList.add('active');
+  $('streamer-btn-desktop').classList.add('active');
   S.currentFlip = S.creatorFlip === 'mix' ? S.flipMap[S.poolIndex] : S.creatorFlip === true;
   renderPresCard();
 }
@@ -469,6 +1164,7 @@ function exitPres() {
   S.presMode = false;
   $('presentation-mode').classList.remove('active');
   $('streamer-btn').classList.remove('active');
+  $('streamer-btn-desktop').classList.remove('active');
 }
 function renderPresCard() {
   const row = currentRow(); if (!row) return;
@@ -476,15 +1172,28 @@ function renderPresCard() {
   const primary = showTarget ? row.translation : row.english;
   const secondary = showTarget ? row.english : row.translation;
   const pPrim = $('pres-primary'), pSec = $('pres-secondary');
+
+  const wordData = parseWordData(row);
+  const primaryHTML = buildWordHTML(primary, wordData);
+  const secondaryHTML = buildWordHTML(secondary, wordData);
+
   $('pres-meta').innerHTML = `
   <div style="display:flex;gap:24px">
-    <span class="pres-level">${row.level}</span>
-    <span>${row.language}</span>
+    <span class="pres-level">${esc(row.level)}</span>
+    <span>${esc(row.language)}</span>
   </div>
-  <div>${row.category}</div>`;
-  scramble(pPrim, primary, 400);
+  <div>${esc(row.category)}</div>`;
+
+  // Set HTML with word tokens for primary
+  pPrim.innerHTML = primaryHTML;
+  attachWordHoverEvents(pPrim);
+
+  // Store secondary for reveal - keep truly hidden until reveal
+  pSec.dataset.html = secondaryHTML;
   pSec.classList.add('hidden');
-  pSec.textContent = secondary;
+  pSec.innerHTML = '&nbsp;';
+  pSec.style.opacity = '0';
+
   S.presRevealed = false;
   pPrim.style.fontSize = S.fontSize + 'px';
   pSec.style.fontSize = S.fontSize + 'px';
@@ -495,14 +1204,32 @@ function presReveal() {
   if (S.presRevealed) return;
   S.presRevealed = true;
   const row = currentRow(); if (!row) return;
+  const pSec = $('pres-secondary');
+  const secondaryHTML = pSec.dataset.html || '';
   const showTarget = S.currentFlip !== undefined ? S.currentFlip : S.creatorFlip === true;
   const secondary = showTarget ? row.english : row.translation;
-  const pSec = $('pres-secondary');
+
   pSec.classList.remove('hidden');
-  scramble(pSec, secondary, 360, () => { if (S.autoPlay) speak(row.translation, row.language); });
+  pSec.style.opacity = '1';
+  pSec.innerHTML = secondaryHTML;
+  attachWordHoverEvents(pSec);
+
+  scramble(pSec, secondary, 360, () => {
+    pSec.innerHTML = secondaryHTML;
+    attachWordHoverEvents(pSec);
+    if (S.autoPlay) speak(row.translation, row.language);
+  });
 }
-function presNext() { goNext(); S.presRevealed = false; renderPresCard(); }
-function presPrev() { goPrev(); S.presRevealed = false; renderPresCard(); }
+function presNext() {
+  S.presRevealed = false;
+  goNext();
+  renderPresCard();
+}
+function presPrev() {
+  S.presRevealed = false;
+  goPrev();
+  renderPresCard();
+}
 
 /* ── Mute toggle ─────────────────────────────────────────── */
 const ICON_ON = `<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>`;
@@ -607,11 +1334,32 @@ function cssToHex(color) {
   return null;
 }
 
+/* ── Word Style Settings ────────────────────────────────── */
+function buildWordStyleSettings() {
+  $$('.word-style-select').forEach(sel => {
+    const pos = sel.dataset.pos;
+    if (S.wordStyles[pos]) sel.value = S.wordStyles[pos];
+
+    sel.addEventListener('change', () => {
+      S.wordStyles[pos] = sel.value;
+      saveSettings();
+      renderCard();
+    });
+  });
+}
+
+function syncWordStyleSettings() {
+  $$('.word-style-select').forEach(sel => {
+    const pos = sel.dataset.pos;
+    sel.value = S.wordStyles[pos] || '';
+  });
+}
+
 /* ── Settings persist ────────────────────────────────────── */
 function loadSettings() {
   try {
     const s = JSON.parse(localStorage.getItem('ll_v3') || '{}');
-    if (s.theme) applyTheme(s.theme); else applyTheme('catppuccin');
+    if (s.theme) applyTheme(s.theme); else applyTheme('hammerhead');
     if (s.fontSize) S.fontSize = s.fontSize;
     if (s.keyReveal !== undefined) S.keyReveal = s.keyReveal;
     if (s.keyNext !== undefined) S.keyNext = s.keyNext;
@@ -624,13 +1372,32 @@ function loadSettings() {
       S.customVars = s.customVars;
       Object.entries(S.customVars).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
     }
-  } catch (e) { applyTheme('latte'); }
+    if (s.wordStyles) {
+      S.wordStyles = s.wordStyles;
+    } else {
+      S.wordStyles = { NOUN: 'underline', VERB: 'dotted' };
+    }
+    if (s.filterSelections) {
+      S.filterSelections = { ...S.filterSelections, ...s.filterSelections };
+    }
+    if (s.filterMode) {
+      S.filterMode = s.filterMode;
+    }
+    if (s.lang) {
+      S.lang = s.lang;
+    }
+    if (s.level) {
+      S.level = s.level;
+    }
+  } catch (e) { applyTheme('hammerhead'); }
 }
 function saveSettings() {
   localStorage.setItem('ll_v3', JSON.stringify({
     theme: S.theme, fontSize: S.fontSize,
     keyReveal: S.keyReveal, keyNext: S.keyNext, keyPrev: S.keyPrev, keyTTS: S.keyTTS,
     randomize: S.randomize, autoPlay: S.autoPlay, ttsVoice: S.ttsVoice, customVars: S.customVars,
+    wordStyles: S.wordStyles, filterSelections: S.filterSelections, filterMode: S.filterMode,
+    lang: S.lang, level: S.level,
   }));
 }
 
@@ -644,6 +1411,7 @@ function syncSettingsUI() {
   const km = { 'key-reveal-input': S.keyReveal, 'key-next-input': S.keyNext, 'key-prev-input': S.keyPrev, 'key-tts-input': S.keyTTS };
   Object.entries(km).forEach(([id, val]) => { const el = $(id); if (el) el.value = keyLabel(val); });
   updateKeyHints();
+  syncWordStyleSettings();
 }
 function syncToggle(id, val) { const el = $(id); if (el) el.classList.toggle('on', val); }
 
@@ -693,7 +1461,8 @@ function handleUpload(file) {
       if (!rows.length) throw new Error('No valid rows found. Check column headers.');
       S.allRows = rows;
       buildLangDropdown(); buildLevelDropdown();
-      buildCategoryChips(); applyFilters(); buildPool(); renderCard();
+      buildFilterModeDropdown(); buildFilterChips();
+      applyFilters(); buildPool(); renderCard();
       $('upload-status').className = 'upload-status ok';
       $('upload-status').textContent = `✓ Loaded ${rows.length} sentences from ${file.name}`;
       setTimeout(() => $('upload-overlay').classList.remove('active'), 1600);
@@ -708,9 +1477,18 @@ function handleUpload(file) {
 /* ── Attach events ───────────────────────────────────────── */
 function attachEvents() {
   $('mute-btn').addEventListener('click', () => { S.autoPlay = !S.autoPlay; syncMuteBtn(); saveSettings(); });
+  const muteBtnMobile = $('mute-btn-mobile');
+  if (muteBtnMobile) muteBtnMobile.addEventListener('click', () => { S.autoPlay = !S.autoPlay; syncMuteBtn(); saveSettings(); });
   $('streamer-btn').addEventListener('click', () => S.presMode ? exitPres() : enterPres());
+  $('streamer-btn-desktop').addEventListener('click', () => S.presMode ? exitPres() : enterPres());
 
   $('settings-btn').addEventListener('click', () => {
+    $('settings-overlay').classList.add('active');
+    populateVoiceSelect();
+    syncColorPickers();
+  });
+  const settingsBtnMobile = $('settings-btn-mobile');
+  if (settingsBtnMobile) settingsBtnMobile.addEventListener('click', () => {
     $('settings-overlay').classList.add('active');
     populateVoiceSelect();
     syncColorPickers();
@@ -719,6 +1497,8 @@ function attachEvents() {
   $('settings-overlay').addEventListener('click', e => { if (e.target === $('settings-overlay')) $('settings-overlay').classList.remove('active'); });
 
   $('upload-btn').addEventListener('click', () => $('upload-overlay').classList.add('active'));
+  const uploadBtnMobile = $('upload-btn-mobile');
+  if (uploadBtnMobile) uploadBtnMobile.addEventListener('click', () => $('upload-overlay').classList.add('active'));
   $('upload-close').addEventListener('click', () => $('upload-overlay').classList.remove('active'));
   $('upload-overlay').addEventListener('click', e => { if (e.target === $('upload-overlay')) $('upload-overlay').classList.remove('active'); });
   $('upload-file-input').addEventListener('change', e => { if (e.target.files[0]) handleUpload(e.target.files[0]); });
@@ -793,6 +1573,7 @@ function attachEvents() {
   document.addEventListener('keydown', handleKey);
 
   buildColorPickers();
+  buildWordStyleSettings();
   syncSettingsUI();
   $('controls-row').style.display = 'flex';
 }
@@ -803,5 +1584,14 @@ document.addEventListener('DOMContentLoaded', () => {
   initCursor();
   initSettingsScroll();
   attachEvents();
-  loadCSV(CSV_SOURCES[S.source]);
+
+  // Apply default font
+  S.fontFamily = "'Inconsolata', monospace";
+  document.documentElement.style.setProperty('--sans', S.fontFamily);
+  document.documentElement.style.setProperty('--mono', S.fontFamily);
+  $$('#font-btns .font-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.font === S.fontFamily);
+  });
+
+  loadCSV(CSV_SOURCES[S.source].url, S.source);
 });

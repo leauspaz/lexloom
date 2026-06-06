@@ -1,11 +1,10 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <meta property="og:title" content="Lexloom"/>
-  <meta property="og:description" content="Sentence-Based Language Learning Flashcard App "/>
+  <meta property="og:description" content="Sentence-Based Language Learning Flashcard App"/>
   <meta property="og:image" content="https://leauspaz.github.io/lexloom/preview.png"/>
   <meta property="og:url" content="https://leauspaz.github.io/lexloom"/>
   <title>Lexloom</title>
@@ -23,9 +22,9 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'G-F1DKQVV7QF');
   </script>
+<base target="_blank">
 </head>
 <body>
 
@@ -34,59 +33,84 @@
 <div id="load-status" class="load-status" style="display:none"></div>
 
 <div id="topbar">
-  <a class="logo" href="#">
-    <span class="logo-dot"></span>Lexloom
-  </a>
+  <!-- Desktop left group -->
+  <div class="topbar-left">
+    <a class="logo" href="#">
+      <span class="logo-dot"></span>Lexloom
+    </a>
+    <div class="desktop-nav">
+      <span class="bar-label">LANG</span>
+      <div id="lang-dropdown" class="custom-select"></div>
+      <div class="bar-sep"></div>
+      <span class="bar-label">LEVEL</span>
+      <div id="level-dropdown" class="custom-select"></div>
+    </div>
+  </div>
+
+  <!-- Desktop right group -->
+  <div class="topbar-right desktop-only">
+    <a class="bar-text-btn bmc" href="https://ko-fi.com/leauspaz" target="_blank" rel="noopener">❤️</a>
+    <button class="bar-btn" id="streamer-btn-desktop" title="Present Mode">
+      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+    </button>
+    <button class="bar-text-btn" id="upload-btn">
+      <svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </button>
+    <button class="bar-btn" id="mute-btn" title="Toggle auto-play on reveal">
+      <svg id="mute-icon" viewBox="0 0 24 24">
+        <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+      </svg>
+    </button>
+    <button class="bar-btn" id="settings-btn" title="Settings">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+
+  <!-- Mobile header -->
   <div id="topbar-main">
     <a class="logo" href="#">
       <span class="logo-dot"></span>Lexloom
     </a>
-    <button class="bar-btn" id="hamburger-btn" title="Menu">
-      <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
-  </div>
-<div id="topbar-drawer">
-    <div class="tb-group">
-      <span class="bar-label">Lang</span>
-      <div id="lang-dropdown" class="custom-select"></div>
-      <div class="bar-sep"></div>
-      <span class="bar-label">Level</span>
-      <div id="level-dropdown" class="custom-select"></div>
-      <div class="bar-sep"></div>
-      <span class="bar-label">SRC</span>
-      <div id="src-dropdown" class="custom-select"></div>
-    </div>
-    <div class="tb-spacer"></div>
-    <div class="tb-group">
+    <div class="mobile-right-group">
       <a class="bar-text-btn bmc" href="https://ko-fi.com/leauspaz" target="_blank" rel="noopener">❤️</a>
-      <button class="bar-text-btn" id="upload-btn">
+      <button class="bar-btn" id="streamer-btn" title="Present Mode">
+        <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      </button>
+      <button class="bar-btn" id="hamburger-btn" title="Menu">
+        <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile drawer -->
+  <div id="topbar-drawer">
+    <div class="tb-group">
+      <div id="lang-dropdown-mobile" class="custom-select"></div>
+      <div id="level-dropdown-mobile" class="custom-select"></div>
+      <button class="bar-text-btn" id="upload-btn-mobile">
         <svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       </button>
-      <div style="display:flex;gap:8px;">
-        <button class="bar-btn" id="mute-btn" title="Toggle auto-play on reveal">
-          <svg id="mute-icon" viewBox="0 0 24 24">
-            <path d="M11 5L6 9H2v6h4l5 4V5z"/>
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-          </svg>
-        </button>
-        <button class="bar-btn" id="streamer-btn" title="Present Mode">
-          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-        </button>
-        <button class="bar-btn" id="settings-btn" title="Settings">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        </button>
-      </div>
+      <button class="bar-btn" id="mute-btn-mobile" title="Toggle auto-play on reveal">
+        <svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+      </button>
+      <button class="bar-btn" id="settings-btn-mobile" title="Settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
     </div>
   </div>
 </div>
 
 <div id="main">
   <div id="filter-bar">
-    <div id="cat">
-    <span class="filter-label">Categories</span>
-    <div id="cat-chips"></div>
+    <div id="filter-mode-wrap">
+      <div id="filter-mode-dropdown" class="custom-select"></div>
     </div>
+    <div id="cat">
+      <div id="cat-chips"></div>
+    </div>
+    <div id="active-filters-summary"></div>
   </div>
   <div id="stats-bar"><span id="stats-text"></span></div>
   <div id="cards-grid"></div>
@@ -186,10 +210,10 @@
     <div class="settings-section">
       <div class="settings-section-label">FONT FAMILY</div>
       <div class="font-grid" id="font-btns">
-        <button class="font-btn active" data-font="inherit" style="font-family:inherit">Syne</button>
+        <button class="font-btn" data-font="inherit" style="font-family:inherit">Syne</button>
         <button class="font-btn" data-font="'JetBrains Mono', monospace" style="font-family:'JetBrains Mono'">JetBrains Mono</button>
         <button class="font-btn" data-font="'Fira Code', monospace" style="font-family:'Fira Code'">Fira Code</button>
-        <button class="font-btn" data-font="'Inconsolata', monospace" style="font-family:'Inconsolata'">Inconsolata</button>
+        <button class="font-btn active" data-font="'Inconsolata', monospace" style="font-family:'Inconsolata'">Inconsolata</button>
         <button class="font-btn" data-font="'Geist Mono', monospace" style="font-family:'Geist Mono'">Geist Mono</button>
         <button class="font-btn" data-font="'Cascadia Mono', monospace" style="font-family:'Cascadia Mono'">Cascadia Mono</button>
         <button class="font-btn" data-font="'Atkinson Hyperlegible', sans-serif" style="font-family:'Atkinson Hyperlegible'">Atkinson Hyperlegible</button>
@@ -230,6 +254,34 @@
     </div>
 
     <div class="settings-section">
+      <div class="settings-section-label">Word Styling</div>
+      <div class="word-style-grid" id="word-style-grid">
+        <div class="word-style-row">
+          <span class="word-style-label">Nouns</span>
+          <select class="word-style-select" data-pos="NOUN">
+            <option value="">None</option>
+            <option value="underline" selected>Underline</option>
+            <option value="italic">Italic</option>
+            <option value="bold">Bold</option>
+            <option value="wavy">Wavy underline</option>
+            <option value="dotted">Dotted underline</option>
+          </select>
+        </div>
+        <div class="word-style-row">
+          <span class="word-style-label">Verbs</span>
+          <select class="word-style-select" data-pos="VERB">
+            <option value="">None</option>
+            <option value="underline">Underline</option>
+            <option value="italic">Italic</option>
+            <option value="bold">Bold</option>
+            <option value="wavy">Wavy underline</option>
+            <option value="dotted" selected>Dotted underline</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
       <div class="settings-section-label">Options</div>
       <div class="toggle-row">
         <span class="toggle-label">Randomize sentence order</span>
@@ -258,8 +310,13 @@
     <div class="upload-format">
       Required columns (header row required):<br>
       <code>language, level, english, translation, category</code><br><br>
+      Optional columns for enhanced features:<br>
+      <code>grammar, sentence_type, word_data, tense, has_two_way_prep, separable_verb, reflexive_verb, genitive_attr, adj_declension, verb_frame</code><br><br>
       · <code>level</code>: A1 A2 B1 B2 C1 C2<br>
       · <code>category</code>: any string (auto-detected)<br>
+      · <code>grammar</code>: pipe-separated tags e.g. <code>Passive|Relative Clause</code><br>
+      · <code>word_data</code>: JSON array with word analysis<br>
+      · <code>has_two_way_prep, separable_verb, reflexive_verb, genitive_attr</code>: TRUE/FALSE<br>
       · UTF-8 · wrap comma-containing cells in quotes
     </div>
     <div class="upload-drop" id="upload-drop">
@@ -278,6 +335,9 @@
   <span class="key-hint-item"><span class="key-hint-key" id="hint-tts-key">S</span> speak</span>
   <span class="key-hint-item"><span class="key-hint-key">Esc</span> exit</span>
 </div>
+
+<!-- WORD TOOLTIP -->
+<div id="word-tooltip" class="word-tooltip"></div>
 
 <script src="app.js"></script>
 </body>
