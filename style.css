@@ -136,7 +136,7 @@ a, button, [role="button"], .card, .chip, .theme-dot, .toggle, .ctrl-btn, .bar-b
 .tb-spacer{flex:1}
 .bar-sep { display: block; width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
 
-.logo{font-family:var(--mono);font-size:17px;font-weight:700;color:var(--head);white-space:nowrap;display:flex;align-items:center;gap:9px;text-decoration:none;margin-right:4px}
+.logo{font-family:var(--mono);font-size:17px;font-weight:700;color:var(--head);white-space:nowrap;display:flex;align-items:center;gap:9px;text-decoration:none;margin-right:0px}
 .logo-dot{width:10px;height:10px;background:var(--accent);border-radius:50%;box-shadow:0 0 10px var(--accent);flex-shrink:0;animation:pulse 2.2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 10px var(--accent)}50%{opacity:.4;box-shadow:0 0 3px var(--accent)}}
 .bar-label{font-size:12px;font-family:var(--mono);color:var(--text-dim);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
@@ -566,7 +566,7 @@ a, button, [role="button"], .card, .chip, .theme-dot, .toggle, .ctrl-btn, .bar-b
   cursor: none;
   transition: opacity 150ms;
   flex-shrink: 0;
-  margin-left: 6px;
+  margin-left: 0px;
   padding: 0;
 }
 .info-btn:hover {
