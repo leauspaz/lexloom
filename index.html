@@ -25,6 +25,8 @@
     gtag('config', 'G-F1DKQVV7QF');
   </script>
 <base target="_blank">
+<base target="_blank">
+<base target="_blank">
 </head>
 <body>
 
@@ -38,6 +40,13 @@
     <a class="logo" href="#">
       <span class="logo-dot"></span>Lexloom
     </a>
+    <button class="info-btn" id="info-btn-desktop" title="About Lexloom">
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="8" cy="8" r="7"/>
+        <line x1="8" y1="11" x2="8" y2="8"/>
+        <circle cx="8" cy="5" r="0.8" fill="currentColor" stroke="none"/>
+      </svg>
+    </button>
     <div class="desktop-nav">
       <span class="bar-label">LANG</span>
       <div id="lang-dropdown" class="custom-select"></div>
@@ -70,9 +79,17 @@
 
   <!-- Mobile header -->
   <div id="topbar-main">
-    <a class="logo" href="#">
-      <span class="logo-dot"></span>Lexloom
-    </a>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <a class="logo" href="#">
+        <span class="logo-dot"></span>Lexloom
+      </a>
+      <button class="info-btn" id="info-btn-mobile" title="About Lexloom">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+          <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+          <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+        </svg>
+      </button>
+    </div>
     <div class="mobile-right-group">
       <a class="bar-text-btn bmc" href="https://ko-fi.com/leauspaz" target="_blank" rel="noopener">❤️</a>
       <button class="bar-btn" id="streamer-btn" title="Present Mode">
@@ -149,6 +166,54 @@
     <button class="ctrl-btn" id="pres-exit-btn">✕ Exit</button>
   </div>
   <div class="pres-progress"><div class="pres-progress-bar" id="pres-progress-bar" style="width:0%"></div></div>
+</div>
+
+<!-- INFO OVERLAY -->
+<div id="info-overlay">
+  <div id="info-panel">
+    <div class="info-title">
+      <span>What is Lexloom?</span>
+      <button class="settings-close" id="info-close">✕</button>
+    </div>
+    <div class="info-content">
+      <p class="info-lead">Flashcards are fine if you want to memorize "apple = Apfel" like a parrot. But if you actually want to <em>think</em> in a language, you need <strong>context</strong>. Full sentences & Real grammar. The messy stuff textbooks hide from you until Chapter 47.</p>
+
+      <p>Lexloom throws 111,111 sentences at you per language. Each one graded A1 → C2 by actual linguistic complexity. Hover over underlined words, get the dictionary form, gender, case, and up to 5 meanings. It's like having a linguist whispering in your ear, except less creepy and more free.</p>
+
+      <h3>Languages Currently Armed</h3>
+      <div class="info-langs">
+        <div class="info-lang"><span class="info-lang-code">DE</span> German <span class="info-lang-feat">The whole nightmare</span></div>
+        <div class="info-lang"><span class="info-lang-code">FR</span> French <span class="info-lang-feat">Because why not hate yourself</span></div>
+        <div class="info-lang"><span class="info-lang-code">IT</span> Italian <span class="info-lang-feat">Hand gestures not included</span></div>
+        <div class="info-lang"><span class="info-lang-code">ES</span> Spanish <span class="info-lang-feat">Subjunctive sold separately</span></div>
+        <div class="info-lang"><span class="info-lang-code">PT</span> Portuguese <span class="info-lang-feat">Brazilian edition coming never</span></div>
+      </div>
+
+      <h3>What You Actually Get</h3>
+      <ul class="info-list">
+        <li><strong>CEFR Graded Sentences</strong><br>A1 to C2. We measure sentence length, clause depth, passive voice, subjunctive mood, and vocabulary frequency. It's science. Ish.</li>
+        <li><strong>Hover Underlined Words</strong><br>See lemma, gender (♂m ♀f ⚲n), grammatical case, tense, and up to 5 English meanings. No more flipping to a dictionary like it's 1998.</li>
+        <li><strong>Grammar Filters</strong><br>Only want passive voice in subjunctive relative clauses? Weird flex, but okay. Filter by topic, grammar, sentence type, inclusions, declension, verb frame. Only shows filters your selected language actually supports.</li>
+        <li><strong>36 Themes</strong><br>18 dark, 18 light. Curated from the mechanical keyboard community because aesthetics matter when you're suffering through German cases.</li>
+        <li><strong>17 Font Families</strong><br>From JetBrains Mono to OpenDyslexic. Your eyes, your rules.</li>
+        <li><strong>Word Styling</strong><br>Underline nouns, dotted verbs, wavy adjectives. Or don't. Live your truth.</li>
+        <li><strong>Presentation Mode</strong><br>Fullscreen, no distractions. Designed for streamers, classrooms, or people who just hate their browser chrome.</li>
+        <li><strong>Text-To-Speech</strong><br>Auto-plays target language on reveal. Train your ear, not just your eyes.</li>
+      </ul>
+
+      <h3>The Fine Print</h3>
+      <p>Sentences from TONS OF SOURCES. Dictionary data from <a href="https://www.dict.cc" target="_blank" rel="noopener">dict.cc</a>. Grammar analysis by <a href="https://spacy.io" target="_blank" rel="noopener">spaCy</a>. CEFR scoring by an algorithm that has opinions.</p>
+
+      <div class="info-support">
+        <p>Lexloom is free. No ads, no subscriptions, no "upgrade to Pro to unlock the letter ß." I built this because I needed it and figured you might too. But your help will keep the site alive, it'll only be live up until i run out of bandwidth.</p>
+        <a class="info-kofi" href="https://ko-fi.com/leauspaz" target="_blank" rel="noopener">❤️ Help keep the site alive on Ko-fi</a>
+      </div>
+
+      <p class="info-footer">Built by someone who actually uses this thing.
+      <br><br>
+      @Leauspaz</p>
+    </div>
+  </div>
 </div>
 
 <!-- SETTINGS -->
@@ -278,6 +343,17 @@
             <option value="dotted" selected>Dotted underline</option>
           </select>
         </div>
+        <div class="word-style-row">
+          <span class="word-style-label">Adjectives</span>
+          <select class="word-style-select" data-pos="ADJ">
+            <option value="">None</option>
+            <option value="underline">Underline</option>
+            <option value="italic">Italic</option>
+            <option value="bold">Bold</option>
+            <option value="wavy" selected>Wavy underline</option>
+            <option value="dotted">Dotted underline</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -308,20 +384,19 @@
   <div id="upload-panel">
     <div class="upload-title">Upload CSV<button class="settings-close" id="upload-close">✕</button></div>
     <div class="upload-format">
-      Required columns (header row required):<br>
-      <code>language, level, english, translation, category</code><br><br>
-      Optional columns for enhanced features:<br>
-      <code>grammar, sentence_type, word_data, tense, has_two_way_prep, separable_verb, reflexive_verb, genitive_attr, adj_declension, verb_frame</code><br><br>
-      · <code>level</code>: A1 A2 B1 B2 C1 C2<br>
-      · <code>category</code>: any string (auto-detected)<br>
+      <strong>Single CSV mode:</strong> Upload a merged CSV with all columns.<br>
+      Required columns: <code>language, level, english, translation, category</code><br><br>
+      <strong>Space-efficient mode (4 files):</strong> Upload all 4 files at once for one language.<br>
+      Files needed: <code>sentences.csv</code>, <code>words.csv</code>, <code>sentence_words.csv</code>, <code>pos_index.csv</code><br><br>
+      · <code>level</code>: A1 A2 B1 B2 C1 C2 · <code>category</code>: any string<br>
       · <code>grammar</code>: pipe-separated tags e.g. <code>Passive|Relative Clause</code><br>
-      · <code>word_data</code>: JSON array with word analysis<br>
-      · <code>has_two_way_prep, separable_verb, reflexive_verb, genitive_attr</code>: TRUE/FALSE<br>
+      · <code>word_data</code>: JSON array with word analysis (single CSV only)<br>
       · UTF-8 · wrap comma-containing cells in quotes
     </div>
     <div class="upload-drop" id="upload-drop">
-      Drop CSV here or click to browse
-      <input type="file" id="upload-file-input" accept=".csv" style="display:none"/>
+      Drop CSV(s) here or click to browse<br>
+      <small style="color:var(--text-dim)">1 file = merged CSV · 4 files = space-efficient set</small>
+      <input type="file" id="upload-file-input" accept=".csv" multiple style="display:none"/>
     </div>
     <div class="upload-status" id="upload-status"></div>
   </div>
@@ -339,6 +414,7 @@
 <!-- WORD TOOLTIP -->
 <div id="word-tooltip" class="word-tooltip"></div>
 
+<script src="space_efficient_loader.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

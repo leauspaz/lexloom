@@ -1,217 +1,123 @@
 # Lexloom
 
-> Sentence-based language learning flashcards — built for learners, streamers, and polyglots.
+> **Learn languages through real sentences.** Not flashcards. Not drills. Context.
 
-[Live Demo](https://leauspaz.github.io/lexloom)
+[Open Lexloom](https://leauspaz.github.io/lexloom) · [Support the project](https://ko-fi.com/leauspaz)
 
 ---
 
 ## What is Lexloom?
 
-Lexloom is a **browser-based flashcard app** for learning languages through full sentences rather than isolated vocabulary. It pulls from a curated CSV dataset of graded sentences (CEFR A1–C2) and presents them with a sleek, distraction-free interface inspired by terminal aesthetics and mechanical keyboards.
+Lexloom is a **sentence-based language trainer** built for people who actually want to *think* in their target language.
 
-Unlike traditional flashcard apps, Lexloom focuses on **contextual grammar**; every sentence is tagged with grammar topics, sentence types, declensions, verb frames, and inclusion features (separable verbs, two-way prepositions, reflexive verbs, genitive attributes). Hover over any word to see its lemma, part of speech, gender, case, and English meanings.
+Instead of memorizing isolated vocabulary, you study full sentences graded by difficulty (A1 → C2). Every word is alive — hover to see its dictionary form, gender, grammatical case, and up to 5 English meanings. Grammar isn't abstract theory here; it's tagged directly onto the sentences you study. Filter by passive voice, subjunctive, relative clauses, reflexive verbs, and more. See it, hear it, understand it.
+
+Currently supports **6 languages** with **111,111 sentences each**:
+
+| Language | Special Grammar Features |
+|----------|------------------------|
+| **German** | Two-way prepositions, separable verbs, genitive attributes, adjective declension (weak/strong/mixed) |
+| **Polish** | Adjective declension, reflexive verbs |
+| **Spanish** | Reflexive verbs |
+| **French** | Reflexive verbs |
+| **Italian** | Reflexive verbs |
+| **Portuguese** | Reflexive verbs |
+
+More languages coming.
 
 ---
 
-## Features
+## How It Works
 
-### Core
+### 1. Pick Your Level
 
-- **Sentence-based flashcards** — English on one side, target language on the other (or vice versa, or mixed)
-- **CEFR level filtering** — A1, A2, B1, B2, C1, C2
-- **Multi-dimensional filtering** — by topic, grammar, sentence type, inclusions, adjective declension, or verb frame
-- **Text-to-speech (TTS)** — auto-plays on reveal with configurable voices
-- **Presentation mode** — full-screen study mode with progress bar, designed for streaming or classroom use
-- **Offline caching** — CSV data cached in IndexedDB for instant reloads
-- **Custom CSV upload** — bring your own sentence dataset
+A1 to C2. Start where you are. The sentences are graded by actual linguistic complexity — sentence length, subordinate clause depth, passive voice, subjunctive mood, and vocabulary frequency.
 
-### Visual
+### 2. Study Cards
 
-- **36 themes** — 18 dark, 18 light, all hand-picked from the mechanical keyboard community
-- **Custom theme editor** — Ability to tweak every CSS variable live
-- **17 font families**
-- **Adjustable font size**
-- **Custom cursor** — smooth GSAP-powered cursor with hover states (desktop)
-- **Text scramble animation** — cards scramble on load with Greek Alphabets
+Each card shows a sentence in **English** or your **target language** (toggle direction, or let it mix randomly). Click or press Space to reveal. Sentences auto-play in native TTS voice on reveal — train your ear, not just your eyes.
 
-### Word Analysis
+### 3. Hover Every Word
 
-- **Hover tooltips** — hover any word to see:
-  - Lemma (dictionary form)
-  - Part of speech (NOUN, VERB) More to be added in the future
-  - Gender (♂ m, ♀ f, ⚲ n)
-  - Grammatical case & tense
-  - Up to 5 English meanings
-- **Visual POS styling** — nouns underlined, verbs dotted, fully customizable
+Every noun, verb, and adjective is interactive. Hover to instantly see:
 
-### Keyboard Controls
+- **Lemma** (dictionary form)
+- **Part of speech** (Noun, Verb, Adjective)
+- **Gender** — ♂ masculine, ♀ feminine, ⚲ neuter
+- **Grammatical case** (Nominative, Accusative, Dative, Genitive)
+- **Tense** (Present, Perfect, Past, Subjunctive...)
+- **Up to 5 English meanings** sourced from dict.cc
 
-| Key | Action |
-|-----|--------|
+### 4. Filter by Grammar
+
+Don't just study "random sentences." Study **exactly what you need**:
+
+- **Topic** — Food, Travel, Work, Health, Family, Nature, Shopping, Housing, Culture, Society, Abstract
+- **Grammar** — Passive voice, Subjunctive, Relative clauses, Infinitive clauses
+- **Sentence Type** — Declarative, Interrogative, Exclamatory, Imperative, Verb-first
+- **Inclusions** — Two-way prepositions, Separable verbs, Reflexive verbs, Genitive attributes *(language-aware: only shows what the selected language actually has)*
+- **Adjective Declension** — Weak, Strong, Mixed *(German & Polish only)*
+- **Verb Frame** — Transitive, Intransitive, Ditransitive, Copula, Modal, Passive
+
+### 5. Presentation Mode
+
+Fullscreen, distraction-free study. Designed for streamers, classroom projection, or focused solo sessions. Progress bar tracks your session.
+
+---
+
+## Visual Customization
+
+Lexloom doesn't just teach languages — it looks good doing it.
+
+### 36 Hand-Crafted Themes
+
+18 dark, 18 light. Curated from the mechanical keyboard community — each theme is a complete color system with carefully balanced background, text, accent, and card colors.
+
+**Dark:** Night Runner · Miami Nights · Aurora · Cyberspace · Joker · Luna · Dracula · Rose Pine · Catppuccin · Nord · Vesper · Superuser · Hammerhead · Bushido · Earthsong · Serika Dark · Monokai · Phantom
+
+**Light:** Milkshake · Serika · Godspeed · Rose Pine Dawn · Repose Light · Latte · Gruvbox Light · Solarized Light · Camping · Cheesecake · Breeze · Olive · Terrazzo · Hanok · Peaches · Witch Girl · Mr. Sleeves · Shoko
+
+### 17 Font Families
+
+From monospace classics (JetBrains Mono, Fira Code, Inconsolata) to readable sans-serifs (Atkinson Hyperlegible, Montserrat, Nunito) to playful display faces (Itim, Coming Soon, Comfortaa). Includes OpenDyslexic for accessibility.
+
+### Adjustable Everything
+
+- Font size: 8px to 72px, or pick from presets (14, 18, 22, 26)
+- Custom theme editor: tweak every color variable live
+- Word styling: choose how Nouns, Verbs, and Adjectives appear — underline, italic, bold, wavy underline, dotted underline, or plain
+
+### Custom Cursor
+
+Smooth, animated cursor that scales on interactive elements. Desktop only — automatically disables on touch devices.
+
+---
+
+## Keyboard-First Design
+
+Every action has a shortcut. All remappable in Settings.
+
+| Default | Action |
+|---------|--------|
 | `Space` | Reveal card |
 | `→` | Next card |
 | `←` | Previous card |
-| `S` | Speak (TTS) |
-| `Esc` | Exit presentation mode / close overlays |
-
-All shortcuts are remappable in Settings.
+| `S` | Speak sentence (TTS) |
+| `Esc` | Exit presentation / close panels |
 
 ---
 
-## Tech Stack
+## Data & Sources
 
-| Layer | Tech |
-|-------|------|
-| Language | Vanilla JavaScript (ES6+) |
-| Styling | CSS custom properties (variables) |
-| CSV Parsing | PapaParse |
-| Animation | GSAP (cursor), CSS transitions (UI) |
-| Storage | IndexedDB (cache), localStorage (settings) |
-| Hosting | GitHub Pages |
+- **Sentences:** Multiple Sources
+- **Dictionary meanings:** dict.cc
+- **Grammar analysis:** spaCy with language-specific models
+- **CEFR grading:** Algorithmic scoring based on linguistic complexity (sentence length, clause depth, mood, voice, vocabulary frequency)
 
 ---
 
-## CSV Format
+## Free. Open Source
 
-Lexloom accepts CSV files with the following columns. A header row is required.
+Lexloom is free and will stay free. If it helps you learn, consider [supporting development](https://ko-fi.com/leauspaz).
 
-### Required
-
-| Column | Description |
-|--------|-------------|
-| `language` | Language name (e.g., `German`, `French`) |
-| `level` | CEFR level: `A1`, `A2`, `B1`, `B2`, `C1`, `C2` |
-| `english` | English sentence |
-| `translation` | Target language sentence |
-| `category` | Topic tag (e.g., `Travel`, `Food`, `Work`) |
-
-### Optional (for enhanced features)
-
-| Column | Description |
-|--------|-------------|
-| `grammar` | Pipe-separated tags: `Passive\|Relative Clause\|Subjunctive` |
-| `sentence_type` | e.g., `statement`, `question`, `imperative` |
-| `word_data` | JSON array of word objects (see below) |
-| `tense` | e.g., `Präsens`, `Perfekt`, `Präteritum` |
-| `has_two_way_prep` | `TRUE` / `FALSE` |
-| `separable_verb` | `TRUE` / `FALSE` |
-| `reflexive_verb` | `TRUE` / `FALSE` |
-| `genitive_attr` | `TRUE` / `FALSE` |
-| `adj_declension` | e.g., `weak_declension`, `strong_declension` |
-| `verb_frame` | e.g., `accusative`, `dative`, `genitive` |
-
-### `word_data` JSON Format
-
-```json
-[
-  {
-    "text": "Häuser",
-    "lemma": "Haus",
-    "pos": "NOUN",
-    "genders": ["n"],
-    "case": "Nominative",
-    "meanings": ["house", "home", "building"]
-  },
-  {
-    "text": "gehen",
-    "lemma": "gehen",
-    "pos": "VERB",
-    "tense": "Präsens",
-    "meanings": ["to go", "to walk", "to leave"]
-  }
-]
-```
-
----
-
-## Architecture
-
-```
-index.html          — Single-page markup
-style.css           — 36 themes + responsive layout + component styles
-app.js              — State management, CSV loading, filtering, rendering, TTS
-```
-
-### State (`S` object)
-
-All application state lives in a single `S` object:
-
-- `allRows` — raw CSV data
-- `filtered` — after language/level/filter chips
-- `pool` — shuffled (or ordered) study deck
-- `poolIndex` — current card position
-- `filterSelections` — active filter chips per mode
-- `customVars` — user-defined theme colors
-- `wordStyles` — noun/verb decoration preferences
-
-### Data Flow
-
-1. **Load** — CSV fetched from Google Sheets (or uploaded), parsed with PapaParse, cached in IndexedDB
-2. **Filter** — language + level + active filter chips → `filtered`
-3. **Pool** — `filtered` shuffled (or not) → `pool`
-4. **Render** — current row → HTML with word tokenization → scramble animation → card display
-5. **Reveal** — secondary text shown, TTS fires (if enabled), word tooltips attach
-
----
-
-## Development
-
-No build step. Clone and open `index.html` in a browser, or serve with any static server:
-
-```bash
-git clone https://github.com/leauspaz/lexloom.git
-cd lexloom
-python -m http.server 8000
-# open http://localhost:8000
-```
-
-### Adding a Language
-
-1. Add a CSV source to `CSV_SOURCES` in `app.js`:
-
-   ```js
-   'FR': {
-     url: 'https://docs.google.com/spreadsheets/d/.../pub?output=csv',
-     version: 1
-   }
-   ```
-
-2. Map it in `LANG_SOURCE_MAP`:
-
-   ```js
-   'FR': 'FR'
-   ```
-
-3. The language dropdown will auto-populate from the `language` column in the CSV.
-
-### Adding a Theme
-
-1. Add CSS variables to `style.css` under `[data-theme="your_theme"]`
-2. Add a dot to the Settings panel in `index.html`:
-
-   ```html
-   <span class="theme-dot" data-theme="your_theme" style="background:#hexcolor" title="Your Theme"></span>
-   ```
-
----
-
-## Browser Support
-
-| Feature | Chrome | Firefox | Safari | Edge |
-|---------|--------|---------|--------|------|
-| Core | ✅ | ✅ | ✅ | ✅ |
-| TTS | ✅ | ✅ | ✅ | ✅ |
-| IndexedDB | ✅ | ✅ | ✅ | ✅ |
-| `color-mix()` | ✅ 111+ | ✅ 88+ | ✅ 16.2+ | ✅ 111+ |
-| Custom cursor | ✅ | ✅ | ✅ | ✅ |
-
----
-
-## License
-
-MIT — see [LICENSE](LICENSE)
-
----
-
-Built with ❤️ by [leauspaz](https://github.com/leauspaz)
+Built with care by [@leauspaz](https://github.com/leauspaz)

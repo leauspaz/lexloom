@@ -1,19 +1,83 @@
 "use strict";
 
-/* ── CSV Sources ─────────────────────────────────────────── */
-const CSV_SOURCES = {
+/* ── Space-Efficient Data Sources (Google Sheets) ─────────── */
+// Each language has 4 CSV exports from Google Sheets:
+//   gid=0  sentences.csv
+//   gid=1  words.csv  
+//   gid=2  sentence_words.csv
+//   gid=3  pos_index.json (or CSV if Sheets can't do JSON)
+//
+// Replace these placeholder URLs with your actual Google Sheets pub URLs.
+// To get a URL: File → Share → Publish to web → Select sheet/tab → CSV
+//
+// For multiple tabs in one sheet, use &gid=0, &gid=1, etc. or separate sheets.
+
+const LANG_DATA_SOURCES = {
   'DE': {
-    url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSN8-Nly4SsV-gUimGWZ2A6BUxO0_WqfBrgoYMXyVNWOYqjGZZB1L_6rLMsbCE9Z9JKwAtyFacksbs7/pub?output=csv',
-    version: 2
-  }
+    name: 'Deutsch',
+    sentences: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS2VCQobR8YGI0tBQWwexNYG6eEiclg2O3KQMX9CLbSVj9oX2Rx0i6fz4XFNferqY-7aApz4ivCUgKq/pub?output=csv',
+    words: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSlwssNy7fhucoeoyHYNNsXs7AiZs_EsLUmq-Hpc6s20iDk2LbVWjd_08Bb1wX367G1yznL1LGv9Xb8/pub?output=csv',
+    sentenceWords: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT0cjsmE38l96p-VEqMATnN25t2hhTKN2S3No6Y4Kbj0Q3RkW3bgcZZ3FAkDrinAUIEc_4qxpeQezl1/pub?output=csv',
+    posIndex: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR2gYPs4Q_lR_dBiVzZSAsgbvyhcCHkCzP2UjB3vVafv1M2Jmc8nKrrMKNMb462T6z1FMUzuJ6E466l/pub?output=csv',
+  },
+  'FR': {
+    name: 'French',
+    sentences: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTZ8p79vfAVYsWcE3VAEBDAkkaKy1ZC8flRAAR0FMBz1azCp145E_KhCjoka0bLGfazr5BcHHyn2Jfm/pub?output=csv',
+    words: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTI_y3PL1nC6KM6oiUy8Q2z6GjQhOzxnOrKyXCB7ysynjN4jo3vhJUyBMmELwlKtPfHZerdyFGu_cuU/pub?output=csv',
+    sentenceWords: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS6K1Yp03fv__ldDQtr-GcwvEecQxIZiIYOZx7LkpDjLaaQ2CHppUFLT_BL4TXq0xTrThSF7TXPVTQQ/pub?output=csv',
+    posIndex: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTsnZ4W8aj7sLZth5UdDvzP4LoTY9h-Bi20cCKA8S0O3bUPuFCEbZCFbvTjv9Ev3JM49C_Ejxxx-v5K/pub?output=csv',
+  },
+  'IT': {
+    name: 'Italian',
+    sentences: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQlB0oV3OPAv48ljUqpR_aSa2WH8diTt1sm0Vji2fW-AykWQRMXxqZNmD0z2sYfD_nt-xlAMWe3kwDD/pub?output=csv',
+    words: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQRc-N3xfLgX3A8UDm0__CVRRVXgupLgySKTlVAdQnKbJNf9Tv4gqRSaylPQroL21AYr14V6KOsbjjd/pub?output=csv',
+    sentenceWords: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSxhsU80RQfWvirUpjria4-E7KpPz_j8bF9Tb79od3xzDd5lZQdcOsSMBOUlPioqciXLRPrH9PXi2v8/pub?output=csv',
+    posIndex: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTgqtQgI_oZt7r1gfPAzUOkT2Aj8Ie34cpdIRiAuw3iHugrf6A3_eo65E8ChKgR8GgQLjHUUEqw2aDt/pub?output=csv',
+  },
+  'ES': {
+    name: 'Español',
+    sentences: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRKNbx_l2zcMpAS0YN2k7JXg8hM_ENMM4eYKcxvYpeEAHxmEGJLEMRl-Y31ZNHU4WSQ0VOEPBtzil1d/pub?output=csv',
+    words: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQtbrJWCNQBAPGOUu5ej3RkooGphJ2IpjohDJAzrWxwpnAGvPeAVg0pqynwdYxQFwvhz8YT3bC0Tlo/pub?output=csv',
+    sentenceWords: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTAxcVfOqjOdotbyQzwxmXFvZGptJsNcBrllI7miz_tKdWhb_oWsJ2osna7fmsHKUea2vIkaIIE-m4s/pub?output=csv',
+    posIndex: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRAMrTiGWInXN9e7v9H3T4-qUimdQ9aQQk74T2aaDcWzKJq9835EKqPecPO5G6FeU5A6CHEWutq45oi/pub?output=csv',
+  },
+  'PT': {
+    name: 'Português',
+    sentences: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSneWHHtCt-nQt9svB8yb9lXkw_2pNer3nZ-a8Eji6MVC2n6Gu3vtwHo_yKjHmzH1MKMuRno6vkghTZ/pub?output=csv',
+    words: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQAJVjbD9bexujwFojzb11IF63X3SkZGYYWlbp_2gmcAZdlsBxWkGlmKY2nu1-PQSlC-bgq303Yhb2m/pub?output=csv',
+    sentenceWords: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ9YgLdPbWOc0vOOCifOqBeHY2aJFpbvCgQnkfFS6oWBfLm3MsxVpCnrwIMmpKksHDFbhRwuUkZJILQ/pub?output=csv',
+    posIndex: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRr7Cy_reAOC8-NL_FOc2joWuGwNlye_HMQfHU3Y5CPvKNB-5N54UC0tqLZDQWYeS5HNbXk8gDASErK/pub?output=csv',
+  },
+  /*
+  'PL': {
+    name: 'Polish',
+    sentences: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ88aFAyS-LHKYeuYMauRuMubDRNA0dBpjnupVRURmgz412-eNBMM48joJn5SKKQrK9qatdkTXkQNKm/pub?output=csv',
+    words: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDx2G-Y5SgXhf1m8QtbQju20wqcqZptfA5B7LEU3FxZ4nFjY2BdOvH6Wje-UlI2TO50d23-6P5FFkV/pub?output=csv',
+    sentenceWords: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTFM5c8dfN-EVVTE_I4Prsb1WWPWMKza-J4-lCjTSvENBCx3eOKx_npibYVr201ePIYSY4q5UI8XaB7/pub?output=csv',
+    posIndex: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRs_7GwDScMFY92Leh_KUpXoupX4CWqDMiiovHFoFlFPvGg48DDjta_k3cgc2Kkz9kRrxDNsRSCRNS3/pub?output=csv',
+  },
+  */
 };
 
-// Language to source mapping for future expansion
-const LANG_SOURCE_MAP = {
-  'DE': 'DE',
-  // 'FR': 'FR', // Add when French source is available
-  // 'ES': 'ES', // Add when Spanish source is available
+/* ── Language Feature Availability ──────────────────────── */
+// Which filters/features are available per language
+const LANG_FEATURES = {
+  'DE': { has_two_way_prep: true, separable_verb: true, genitive_attr: true, adj_declension: true, reflexive_verb: true },
+  'ES': { has_two_way_prep: false, separable_verb: false, genitive_attr: false, adj_declension: false, reflexive_verb: true },
+  'FR': { has_two_way_prep: false, separable_verb: false, genitive_attr: false, adj_declension: false, reflexive_verb: true },
+  'IT': { has_two_way_prep: false, separable_verb: false, genitive_attr: false, adj_declension: false, reflexive_verb: true },
+  'PL': { has_two_way_prep: false, separable_verb: false, genitive_attr: false, adj_declension: true, reflexive_verb: true },
+  'PT': { has_two_way_prep: false, separable_verb: false, genitive_attr: false, adj_declension: false, reflexive_verb: true },
+  'ZH': { has_two_way_prep: false, separable_verb: false, genitive_attr: false, adj_declension: false, reflexive_verb: false },
 };
+
+function getCurrentLangFeatures() {
+  if (S.lang === 'All' || !LANG_FEATURES[S.lang]) {
+    // If All or unknown, show all filters (let data decide)
+    return { has_two_way_prep: true, separable_verb: true, genitive_attr: true, adj_declension: true, reflexive_verb: true };
+  }
+  return LANG_FEATURES[S.lang];
+}
 
 /* ── State ──────────────────────────────────────────────── */
 const S = {
@@ -39,21 +103,35 @@ const S = {
   }
 };
 
-const FILTER_MODES = [
-  { key: 'topic', label: 'Topic' },
-  { key: 'grammar', label: 'Grammar' },
-  { key: 'sentence_type', label: 'Sentence Type' },
-  { key: 'inclusions', label: 'Inclusions' },
-  { key: 'adj_declension', label: 'Adj. Declension' },
-  { key: 'verb_frame', label: 'Verb Frame' }
+const ALL_FILTER_MODES = [
+  { key: 'topic', label: 'Topic', always: true },
+  { key: 'grammar', label: 'Grammar', always: true },
+  { key: 'sentence_type', label: 'Sentence Type', always: true },
+  { key: 'inclusions', label: 'Inclusions', always: true },
+  { key: 'adj_declension', label: 'Adj. Declension', always: false, langKey: 'adj_declension' },
+  { key: 'verb_frame', label: 'Verb Frame', always: true },
 ];
 
-const INCLUSION_OPTIONS = [
-  { key: 'has_two_way_prep', label: 'Two-way Preposition' },
-  { key: 'separable_verb', label: 'Separable Verb' },
-  { key: 'reflexive_verb', label: 'Reflexive Verb' },
-  { key: 'genitive_attr', label: 'Genitive Attribute' }
+const ALL_INCLUSION_OPTIONS = [
+  { key: 'has_two_way_prep', label: 'Two-way Preposition', langKey: 'has_two_way_prep' },
+  { key: 'separable_verb', label: 'Separable Verb', langKey: 'separable_verb' },
+  { key: 'reflexive_verb', label: 'Reflexive Verb', langKey: 'reflexive_verb' },
+  { key: 'genitive_attr', label: 'Genitive Attribute', langKey: 'genitive_attr' }
 ];
+
+function getFilterModes() {
+  const features = getCurrentLangFeatures();
+  return ALL_FILTER_MODES.filter(m => m.always || features[m.langKey]);
+}
+
+function getInclusionOptions() {
+  const features = getCurrentLangFeatures();
+  return ALL_INCLUSION_OPTIONS.filter(o => features[o.langKey]);
+}
+
+// Backward compat aliases
+const FILTER_MODES = ALL_FILTER_MODES;
+const INCLUSION_OPTIONS = ALL_INCLUSION_OPTIONS;
 
 const COLOR_VARS = [
   { key: '--bg', label: 'Background' },
@@ -258,113 +336,232 @@ function parseCSV(text) {
     .filter(r => r.language && r.level && r.english && r.translation && r.category);
 }
 
-/* ── Load CSV with XMLHttpRequest for progress ──────────── */
-function loadCSVWithProgress(url, source, onProgress) {
+/* ── Space-Efficient Load ───────────────────────────────── */
+/* ── Language Data Cache (IndexedDB) ────────────────────── */
+const LANG_DB_NAME = 'lexloom_lang_cache';
+const LANG_DB_VERSION = 1;
+const LANG_STORE = 'lang_data';
+
+function openLangDB() {
   return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-
-    let dotCount = 0;
-    let dotInterval = null;
-
-    function startDotAnimation(baseMsg) {
-      if (dotInterval) clearInterval(dotInterval);
-      dotInterval = setInterval(() => {
-        dotCount = (dotCount + 1) % 10;
-        const dots = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'][dotCount];
-        onProgress(baseMsg + ' ' + dots);
-      }, 80);
-    }
-
-    function stopDotAnimation() {
-      if (dotInterval) {
-        clearInterval(dotInterval);
-        dotInterval = null;
-      }
-    }
-
-    xhr.onloadstart = () => {
-      startDotAnimation('Downloading Lexloom ' + source);
-    };
-
-    xhr.onload = () => {
-      stopDotAnimation();
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(xhr.responseText);
-      } else {
-        reject(new Error(`HTTP ${xhr.status}`));
+    const req = indexedDB.open(LANG_DB_NAME, LANG_DB_VERSION);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => resolve(req.result);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(LANG_STORE)) {
+        db.createObjectStore(LANG_STORE, { keyPath: 'key' });
       }
     };
-
-    xhr.onerror = () => {
-      stopDotAnimation();
-      reject(new Error('Network error'));
-    };
-    xhr.ontimeout = () => {
-      stopDotAnimation();
-      reject(new Error('Timeout'));
-    };
-
-    xhr.send();
   });
 }
 
-async function loadCSV(url, source) {
+async function getLangCache(key) {
   try {
-    const sourceConfig = CSV_SOURCES[source];
-    const currentVersion = sourceConfig ? sourceConfig.version : 1;
+    const db = await openLangDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(LANG_STORE, 'readonly');
+      const store = tx.objectStore(LANG_STORE);
+      const req = store.get(key);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) { return null; }
+}
 
-    // Check cache first
-    setLoadStatus(`Checking cache for ${source}...`);
-    const cached = await getCachedCSV(source);
+async function setLangCache(key, text, timestamp) {
+  try {
+    const db = await openLangDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(LANG_STORE, 'readwrite');
+      const store = tx.objectStore(LANG_STORE);
+      const req = store.put({ key, text, timestamp });
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) { console.error('Cache save failed:', e); }
+}
 
-    if (cached && cached.version === currentVersion) {
-      let cacheDotCount = 0;
-      const cacheSpinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-      let cacheDotInterval = setInterval(() => {
-        cacheDotCount = (cacheDotCount + 1) % cacheSpinner.length;
-        setLoadStatus('Loading Lexloom ' + source + ' from cache ' + cacheSpinner[cacheDotCount]);
-      }, 80);
-      await new Promise(r => setTimeout(r, 0));
+async function clearLangCache(lang) {
+  try {
+    const db = await openLangDB();
+    const tx = db.transaction(LANG_STORE, 'readwrite');
+    const store = tx.objectStore(LANG_STORE);
+    const keys = [`${lang}_sentences`, `${lang}_words`, `${lang}_sentenceWords`, `${lang}_posIndex`];
+    for (const k of keys) store.delete(k);
+  } catch (e) { console.error('Cache clear failed:', e); }
+}
 
-      const rows = parseCSV(cached.text);
-      clearInterval(cacheDotInterval);
-      if (!rows.length) throw new Error('no rows in cached data');
+/* ── Fast spinner helper ────────────────────────────────── */
+const SPINNER_CHARS = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+function startSpinner(msg) {
+  let i = 0;
+  const interval = setInterval(() => {
+    i = (i + 1) % SPINNER_CHARS.length;
+    setLoadStatus(`${msg} ${SPINNER_CHARS[i]}`);
+  }, 80);
+  return interval;
+}
+function stopSpinner(interval) {
+  if (interval) clearInterval(interval);
+}
 
-      S.allRows = rows;
-      setLoadStatus(`Loaded ${rows.length.toLocaleString()} cards from cache`);
-      afterLoad();
-      setTimeout(hideLoadStatus, 2000);
-      return;
+/* ── Fetch with cache-first strategy ────────────────────── */
+async function fetchWithCache(url, cacheKey, actionName) {
+  // Check IndexedDB cache first
+  const cached = await getLangCache(cacheKey);
+  if (cached && cached.text) {
+    return { text: cached.text, fromCache: true };
+  }
+
+  // Not cached — fetch from network
+  const spinner = startSpinner(`${actionName}`);
+  try {
+    const resp = await fetch(url);
+    stopSpinner(spinner);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const text = await resp.text();
+    if (text.trim().startsWith('<')) throw new Error('got HTML, not CSV — check sharing permissions');
+    // Save to cache
+    await setLangCache(cacheKey, text, Date.now());
+    return { text, fromCache: false };
+  } catch (e) {
+    stopSpinner(spinner);
+    throw e;
+  }
+}
+
+/* ── Load language data with full caching ───────────────── */
+async function loadLanguageData(lang) {
+  const config = LANG_DATA_SOURCES[lang];
+  if (!config) throw new Error(`No data source for ${lang}`);
+
+  // Clear all filters FIRST so UI is responsive while loading
+  clearAllFilters();
+
+  setLoadStatus(`Checking cache for ${config.name}...`);
+
+  try {
+    // 1. Load words (cache-first)
+    const wordsResult = await fetchWithCache(config.words, `${lang}_words`, `Downloading ${config.name} words`);
+    if (wordsResult.fromCache) {
+      setLoadStatus(`Loading ${config.name} words from cache ⠿`);
+    } else {
+      setLoadStatus(`Downloaded ${config.name} words ✓`);
     }
 
-    // Download with progress
-    const text = await loadCSVWithProgress(url, source, msg => {
-      setLoadStatus(msg);
+    // 2. Load sentence-word mappings (cache-first)
+    const swResult = await fetchWithCache(config.sentenceWords, `${lang}_sentenceWords`, `Downloading ${config.name} links`);
+    if (swResult.fromCache) {
+      setLoadStatus(`Loading ${config.name} links from cache ⠿`);
+    } else {
+      setLoadStatus(`Downloaded ${config.name} links ✓`);
+    }
+
+    // 3. Load POS index (cache-first, optional)
+    let posText = null;
+    if (config.posIndex) {
+      try {
+        const posResult = await fetchWithCache(config.posIndex, `${lang}_posIndex`, `Downloading ${config.name} index`);
+        posText = posResult.text;
+        if (posResult.fromCache) {
+          setLoadStatus(`Loading ${config.name} index from cache ⠿`);
+        } else {
+          setLoadStatus(`Downloaded ${config.name} index ✓`);
+        }
+      } catch (e) {
+        console.warn('POS index unavailable:', e.message);
+      }
+    }
+
+    // 4. Parse word data into SpaceEfficientLoader
+    setLoadStatus(`Parsing ${config.name} dictionary.`);
+    await new Promise(r => setTimeout(r, 10)); // let UI update
+
+    SpaceEfficientLoader.wordsCache.clear();
+    const wordsRows = SpaceEfficientLoader.parseCSV(wordsResult.text);
+    for (const row of wordsRows) {
+      SpaceEfficientLoader.wordsCache.set(parseInt(row.word_id), {
+        word_id: parseInt(row.word_id),
+        lemma: row.lemma,
+        text: row.text,
+        pos: row.pos,
+        genders: SpaceEfficientLoader.safeJSON(row.genders),
+        meanings: SpaceEfficientLoader.safeJSON(row.meanings),
+        case: row.case || '',
+        tense: row.tense || '',
+        person: row.person || '',
+        number: row.number || '',
+        gender: row.gender || '',
+      });
+    }
+
+    // 5. Parse sentence-word mappings
+    SpaceEfficientLoader.sentenceWordsCache.clear();
+    const swRows = SpaceEfficientLoader.parseCSV(swResult.text);
+    for (const row of swRows) {
+      const sid = parseInt(row.sentence_id);
+      if (!SpaceEfficientLoader.sentenceWordsCache.has(sid)) {
+        SpaceEfficientLoader.sentenceWordsCache.set(sid, []);
+      }
+      SpaceEfficientLoader.sentenceWordsCache.get(sid).push({
+        word_id: parseInt(row.word_id),
+        token_index: parseInt(row.token_index),
+        token_text: row.token_text,
+      });
+    }
+
+    // 6. Parse POS index
+    SpaceEfficientLoader.posIndex = {};
+    if (posText) {
+      try {
+        if (posText.trim().startsWith('{')) {
+          SpaceEfficientLoader.posIndex = JSON.parse(posText);
+        } else {
+          const rows = SpaceEfficientLoader.parseCSV(posText);
+          rows.forEach(row => {
+            const pos = row.pos || row[Object.keys(row)[0]];
+            const ids = Object.values(row).slice(1).filter(v => v).map(v => parseInt(v)).filter(n => !isNaN(n));
+            if (pos) SpaceEfficientLoader.posIndex[pos] = ids;
+          });
+        }
+      } catch (e) {
+        console.warn('POS index parse failed:', e.message);
+      }
+    }
+
+    SpaceEfficientLoader.enabled = true;
+    console.log(`[SpaceEfficient] ${config.name}: ${SpaceEfficientLoader.wordsCache.size} words, ${SpaceEfficientLoader.sentenceWordsCache.size} sentences`);
+
+    // 7. Load sentences CSV (cache-first)
+    const sentResult = await fetchWithCache(config.sentences, `${lang}_sentences`, `Downloading ${config.name} sentences`);
+    if (sentResult.fromCache) {
+      setLoadStatus(`Loading ${config.name} sentences from cache ⠿`);
+    } else {
+      setLoadStatus(`Downloaded ${config.name} sentences ✓`);
+    }
+
+    // 8. Parse sentences
+    const parseSpinner = startSpinner(`Parsing ${config.name} sentences`);
+    await new Promise(r => setTimeout(r, 50));
+
+    const sentences = SpaceEfficientLoader.parseCSV(sentResult.text);
+    stopSpinner(parseSpinner);
+
+    if (!sentences.length) throw new Error('no sentences');
+
+    // 9. Merge with word data
+    S.allRows = sentences.map((row, idx) => {
+      const sid = parseInt(row.sentence_id !== undefined ? row.sentence_id : idx);
+      const wordData = SpaceEfficientLoader.getWordData(sid);
+      return {
+        ...row,
+        language: lang,
+        word_data: wordData.length ? JSON.stringify(wordData) : '[]',
+      };
     });
 
-    if (text.trim().startsWith('<')) throw new Error('got HTML, not CSV');
-
-    let parseDotCount = 0;
-    const spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-    let parseDotInterval = setInterval(() => {
-      parseDotCount = (parseDotCount + 1) % spinner.length;
-      setLoadStatus('Parsing rows ' + spinner[parseDotCount]);
-    }, 80);
-
-    // Give browser time to show spinner before synchronous parsing
-    await new Promise(r => setTimeout(r, 200));
-
-    const rows = parseCSV(text);
-    if (!rows.length) throw new Error('no rows');
-
-    // Keep spinner visible briefly after parsing
-    await new Promise(r => setTimeout(r, 300));
-    if (parseDotInterval) clearInterval(parseDotInterval);
-    await setCachedCSV(source, text, currentVersion);
-
-    S.allRows = rows;
-    setLoadStatus(`Loaded ${rows.length.toLocaleString()} cards`);
+    setLoadStatus(`Loaded ${S.allRows.length.toLocaleString()} sentences for ${config.name}`);
     afterLoad();
     setTimeout(hideLoadStatus, 2000);
 
@@ -373,6 +570,12 @@ async function loadCSV(url, source) {
     setTimeout(hideLoadStatus, 4000);
     throw e;
   }
+}
+
+// Backward compat: loadCSV now delegates to loadLanguageData
+async function loadCSV(url, source) {
+  // source is now the language code directly
+  return loadLanguageData(source);
 }
 
 function setLoadStatus(msg) {
@@ -400,26 +603,17 @@ async function handleLanguageChange(newLang) {
   const oldLang = S.lang;
   S.lang = newLang;
 
-  // Check if we need to load a different source
-  const newSource = LANG_SOURCE_MAP[newLang];
-
-  if (newSource && newSource !== S.source && CSV_SOURCES[newSource]) {
-    // Need to load new source for this language
-    S.source = newSource;
+  // Check if we need to load new language data
+  if (newLang !== 'All' && LANG_DATA_SOURCES[newLang] && newLang !== oldLang) {
     try {
-      await loadCSV(CSV_SOURCES[newSource].url, newSource);
-      // After loading, apply the language filter
-      applyFilters();
-      buildPool();
-      renderCard();
+      await loadLanguageData(newLang);
+      // loadLanguageData already calls clearAllFilters() + afterLoad()
     } catch (err) {
       console.error(err);
-      S.lang = oldLang; // Revert on failure
-      S.source = LANG_SOURCE_MAP[oldLang] || S.source;
-      alert('Failed to load source for ' + newLang);
+      S.lang = oldLang;
+      alert('Failed to load data for ' + newLang);
     }
   } else {
-    // Same source, just filter
     applyFilters();
     buildPool();
     renderCard();
@@ -431,16 +625,15 @@ async function handleLanguageChange(newLang) {
 
 /* ── Filters ─────────────────────────────────────────────── */
 function buildLangDropdown() {
-  const langs = ['All', ...new Set(S.allRows.map(r => r.language))].filter(Boolean);
-  const options = langs.length === 1 ? langs : langs;
+  const langs = ['All', ...Object.keys(LANG_DATA_SOURCES)];
   const current = S.lang;
-  makeDropdown('lang-dropdown', options, current, val => {
+  makeDropdown('lang-dropdown', langs, current, val => {
     handleLanguageChange(val);
   });
   // Mobile version
   const mobileLang = $('lang-dropdown-mobile');
   if (mobileLang) {
-    makeDropdown('lang-dropdown-mobile', options, current, val => {
+    makeDropdown('lang-dropdown-mobile', langs, current, val => {
       handleLanguageChange(val);
     });
   }
@@ -462,10 +655,16 @@ function buildLevelDropdown() {
 
 /* ── Filter Mode Dropdown ───────────────────────────────── */
 function buildFilterModeDropdown() {
-  const options = FILTER_MODES.map(m => m.label);
-  const current = FILTER_MODES.find(m => m.key === S.filterMode)?.label || 'Topic';
+  const modes = getFilterModes();
+  const options = modes.map(m => m.label);
+  // If current mode is not available for this language, reset to topic
+  const currentMode = modes.find(m => m.key === S.filterMode);
+  if (!currentMode) {
+    S.filterMode = 'topic';
+  }
+  const current = modes.find(m => m.key === S.filterMode)?.label || 'Topic';
   makeDropdown('filter-mode-dropdown', options, current, val => {
-    const mode = FILTER_MODES.find(m => m.label === val)?.key || 'topic';
+    const mode = modes.find(m => m.label === val)?.key || 'topic';
     S.filterMode = mode;
     buildFilterChips();
     applyFilters();
@@ -507,7 +706,7 @@ function getFilterValues(mode) {
       return [...new Set(S.allRows.map(r => r.sentence_type))].filter(Boolean)
         .map(v => capitalizeWords(v)).sort();
     case 'inclusions':
-      return INCLUSION_OPTIONS.map(o => o.label);
+      return getInclusionOptions().map(o => o.label);
     case 'adj_declension':
       return [...new Set(S.allRows.map(r => r.adj_declension))].filter(Boolean)
         .map(v => capitalizeWords(v.replace(/_/g, ' '))).sort();
@@ -656,11 +855,12 @@ function applyFilters() {
     });
   }
 
-  // Inclusions filter (boolean columns)
+  // Inclusions filter (boolean columns) — only check available features
   if (!S.filterSelections.inclusions.includes('All')) {
+    const availableOptions = getInclusionOptions();
     r = r.filter(x => {
       return S.filterSelections.inclusions.some(incLabel => {
-        const option = INCLUSION_OPTIONS.find(o => o.label === incLabel);
+        const option = availableOptions.find(o => o.label === incLabel);
         if (!option) return false;
         const val = x[option.key];
         const strVal = String(val).toLowerCase().trim();
@@ -720,7 +920,7 @@ function updateStats() {
       label = 'Sentence Types';
       break;
     case 'inclusions':
-      uniqueCount = INCLUSION_OPTIONS.length;
+      uniqueCount = getInclusionOptions().length;
       label = 'Inclusions';
       break;
     case 'adj_declension':
@@ -1382,7 +1582,7 @@ function loadSettings() {
     if (s.wordStyles) {
       S.wordStyles = s.wordStyles;
     } else {
-      S.wordStyles = { NOUN: 'underline', VERB: 'dotted' };
+      S.wordStyles = { NOUN: 'underline', VERB: 'dotted', ADJ: 'wavy' };
     }
     if (s.filterSelections) {
       S.filterSelections = { ...S.filterSelections, ...s.filterSelections };
@@ -1460,25 +1660,160 @@ function handleKey(e) {
 }
 
 /* ── Upload ──────────────────────────────────────────────── */
-function handleUpload(file) {
-  const reader = new FileReader();
-  reader.onload = e => {
+let pendingUploadFiles = [];
+
+function detectFileType(filename) {
+  const lower = filename.toLowerCase();
+  if (lower.includes('sentence_words')) return 'sentenceWords';
+  if (lower.includes('sentences')) return 'sentences';
+  if (lower.includes('words') && !lower.includes('sentence')) return 'words';
+  if (lower.includes('pos_index')) return 'posIndex';
+  return 'merged'; // fallback: single merged CSV
+}
+
+async function handleUploadFiles(files) {
+  pendingUploadFiles = [...files];
+  const fileMap = {};
+
+  for (const file of files) {
+    const type = detectFileType(file.name);
+    fileMap[type] = file;
+  }
+
+  // Check if it's a space-efficient set (4 files) or single merged CSV
+  const hasSpaceEfficient = fileMap.sentences && fileMap.words && fileMap.sentenceWords;
+
+  if (hasSpaceEfficient) {
+    // Space-efficient mode: load words, sentenceWords, posIndex, then sentences
+    $('upload-status').className = 'upload-status';
+    $('upload-status').textContent = 'Loading space-efficient set...';
+
     try {
-      const rows = parseCSV(e.target.result);
-      if (!rows.length) throw new Error('No valid rows found. Check column headers.');
-      S.allRows = rows;
-      buildLangDropdown(); buildLevelDropdown();
-      buildFilterModeDropdown(); buildFilterChips();
-      applyFilters(); buildPool(); renderCard();
+      // 1. Load words
+      if (fileMap.words) {
+        $('upload-status').textContent = 'Parsing words.csv...';
+        const wordsText = await fileMap.words.text();
+        const wordsRows = SpaceEfficientLoader.parseCSV(wordsText);
+        SpaceEfficientLoader.wordsCache.clear();
+        for (const row of wordsRows) {
+          SpaceEfficientLoader.wordsCache.set(parseInt(row.word_id), {
+            word_id: parseInt(row.word_id),
+            lemma: row.lemma,
+            text: row.text,
+            pos: row.pos,
+            genders: SpaceEfficientLoader.safeJSON(row.genders),
+            meanings: SpaceEfficientLoader.safeJSON(row.meanings),
+            case: row.case || '',
+            tense: row.tense || '',
+            person: row.person || '',
+            number: row.number || '',
+            gender: row.gender || '',
+          });
+        }
+      }
+
+      // 2. Load sentence-word mappings
+      if (fileMap.sentenceWords) {
+        $('upload-status').textContent = 'Parsing sentence_words.csv...';
+        const swText = await fileMap.sentenceWords.text();
+        const swRows = SpaceEfficientLoader.parseCSV(swText);
+        SpaceEfficientLoader.sentenceWordsCache.clear();
+        for (const row of swRows) {
+          const sid = parseInt(row.sentence_id);
+          if (!SpaceEfficientLoader.sentenceWordsCache.has(sid)) {
+            SpaceEfficientLoader.sentenceWordsCache.set(sid, []);
+          }
+          SpaceEfficientLoader.sentenceWordsCache.get(sid).push({
+            word_id: parseInt(row.word_id),
+            token_index: parseInt(row.token_index),
+            token_text: row.token_text,
+          });
+        }
+      }
+
+      // 3. Load POS index (optional)
+      SpaceEfficientLoader.posIndex = {};
+      if (fileMap.posIndex) {
+        $('upload-status').textContent = 'Parsing pos_index...';
+        const posText = await fileMap.posIndex.text();
+        try {
+          if (posText.trim().startsWith('{')) {
+            SpaceEfficientLoader.posIndex = JSON.parse(posText);
+          } else {
+            const rows = SpaceEfficientLoader.parseCSV(posText);
+            rows.forEach(row => {
+              const pos = row.pos || row[Object.keys(row)[0]];
+              const ids = Object.values(row).slice(1).filter(v => v).map(v => parseInt(v)).filter(n => !isNaN(n));
+              if (pos) SpaceEfficientLoader.posIndex[pos] = ids;
+            });
+          }
+        } catch (e) {
+          console.warn('POS index parse failed:', e.message);
+        }
+      }
+
+      SpaceEfficientLoader.enabled = true;
+
+      // 4. Load sentences
+      $('upload-status').textContent = 'Parsing sentences.csv...';
+      const sentText = await fileMap.sentences.text();
+      const sentences = SpaceEfficientLoader.parseCSV(sentText);
+
+      if (!sentences.length) throw new Error('No sentences found');
+
+      // Detect language from first sentence or default to 'UP'
+      const detectedLang = sentences[0].language || 'UP';
+
+      S.allRows = sentences.map((row, idx) => {
+        const sid = parseInt(row.sentence_id !== undefined ? row.sentence_id : idx);
+        const wordData = SpaceEfficientLoader.getWordData(sid);
+        return {
+          ...row,
+          language: detectedLang,
+          word_data: wordData.length ? JSON.stringify(wordData) : '[]',
+        };
+      });
+
       $('upload-status').className = 'upload-status ok';
-      $('upload-status').textContent = `✓ Loaded ${rows.length} sentences from ${file.name}`;
-      setTimeout(() => $('upload-overlay').classList.remove('active'), 1600);
+      $('upload-status').textContent = `✓ Loaded ${S.allRows.length} sentences from space-efficient set`;
+
     } catch (err) {
       $('upload-status').className = 'upload-status err';
       $('upload-status').textContent = '✗ ' + err.message;
+      return;
     }
-  };
-  reader.readAsText(file);
+
+  } else if (fileMap.merged || files.length === 1) {
+    // Single merged CSV mode
+    const file = fileMap.merged || files[0];
+    try {
+      const text = await file.text();
+      const rows = parseCSV(text);
+      if (!rows.length) throw new Error('No valid rows found. Check column headers.');
+      S.allRows = rows;
+      $('upload-status').className = 'upload-status ok';
+      $('upload-status').textContent = `✓ Loaded ${rows.length} sentences from ${file.name}`;
+    } catch (err) {
+      $('upload-status').className = 'upload-status err';
+      $('upload-status').textContent = '✗ ' + err.message;
+      return;
+    }
+  } else {
+    $('upload-status').className = 'upload-status err';
+    $('upload-status').textContent = '✗ Need 4 files (sentences, words, sentence_words, pos_index) or 1 merged CSV';
+    return;
+  }
+
+  // Common: refresh UI
+  buildLangDropdown(); buildLevelDropdown();
+  buildFilterModeDropdown(); buildFilterChips();
+  applyFilters(); buildPool(); renderCard();
+  setTimeout(() => $('upload-overlay').classList.remove('active'), 1600);
+}
+
+// Legacy single-file handler
+function handleUpload(file) {
+  handleUploadFiles([file]);
 }
 
 /* ── Attach events ───────────────────────────────────────── */
@@ -1503,17 +1838,25 @@ function attachEvents() {
   $('settings-close').addEventListener('click', () => $('settings-overlay').classList.remove('active'));
   $('settings-overlay').addEventListener('click', e => { if (e.target === $('settings-overlay')) $('settings-overlay').classList.remove('active'); });
 
+  // Info overlay
+  const infoBtn = $('info-btn-desktop');
+  if (infoBtn) infoBtn.addEventListener('click', () => $('info-overlay').classList.add('active'));
+  const infoBtnMobile = $('info-btn-mobile');
+  if (infoBtnMobile) infoBtnMobile.addEventListener('click', () => $('info-overlay').classList.add('active'));
+  $('info-close').addEventListener('click', () => $('info-overlay').classList.remove('active'));
+  $('info-overlay').addEventListener('click', e => { if (e.target === $('info-overlay')) $('info-overlay').classList.remove('active'); });
+
   $('upload-btn').addEventListener('click', () => $('upload-overlay').classList.add('active'));
   const uploadBtnMobile = $('upload-btn-mobile');
   if (uploadBtnMobile) uploadBtnMobile.addEventListener('click', () => $('upload-overlay').classList.add('active'));
   $('upload-close').addEventListener('click', () => $('upload-overlay').classList.remove('active'));
   $('upload-overlay').addEventListener('click', e => { if (e.target === $('upload-overlay')) $('upload-overlay').classList.remove('active'); });
-  $('upload-file-input').addEventListener('change', e => { if (e.target.files[0]) handleUpload(e.target.files[0]); });
+  $('upload-file-input').addEventListener('change', e => { if (e.target.files.length) handleUploadFiles(e.target.files); });
   const drop = $('upload-drop');
   drop.addEventListener('click', () => $('upload-file-input').click());
   drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
   drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
-  drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('dragover'); if (e.dataTransfer.files[0]) handleUpload(e.dataTransfer.files[0]); });
+  drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('dragover'); if (e.dataTransfer.files.length) handleUploadFiles(e.dataTransfer.files); });
 
   $$('.theme-dot').forEach(d => d.addEventListener('click', () => applyTheme(d.dataset.theme)));
 
@@ -1556,10 +1899,10 @@ function attachEvents() {
   $('reveal-btn').addEventListener('click', revealCard);
 
   function getFlipLabel() {
-    const lang = (S.lang && S.lang !== 'All') ? S.lang : 'Target';
-    if (S.creatorFlip === false) return `EN → ${lang}`;
-    if (S.creatorFlip === true) return `EN ← ${lang}`;
-    return `EN ⇄ ${lang}`;
+    const langName = (S.lang && S.lang !== 'All') ? (LANG_DATA_SOURCES[S.lang]?.name || S.lang) : 'Target';
+    if (S.creatorFlip === false) return `EN → ${langName}`;
+    if (S.creatorFlip === true) return `EN ← ${langName}`;
+    return `EN ⇄ ${langName}`;
   }
 
   $('flip-btn').addEventListener('click', () => {
@@ -1600,5 +1943,8 @@ document.addEventListener('DOMContentLoaded', () => {
     b.classList.toggle('active', b.dataset.font === S.fontFamily);
   });
 
-  loadCSV(CSV_SOURCES[S.source].url, S.source);
+  // Load default language (DE)
+  const defaultLang = S.lang || 'DE';
+  S.lang = defaultLang;
+  loadLanguageData(defaultLang);
 });
