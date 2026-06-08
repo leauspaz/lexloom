@@ -603,8 +603,8 @@ async function handleLanguageChange(newLang) {
   const oldLang = S.lang;
   S.lang = newLang;
 
-  // Check if we need to load new language data
-  if (newLang !== 'All' && LANG_DATA_SOURCES[newLang] && newLang !== oldLang) {
+  // Load new language data if different from current
+  if (LANG_DATA_SOURCES[newLang] && newLang !== oldLang) {
     try {
       await loadLanguageData(newLang);
       // loadLanguageData already calls clearAllFilters() + afterLoad()
@@ -625,7 +625,7 @@ async function handleLanguageChange(newLang) {
 
 /* ── Filters ─────────────────────────────────────────────── */
 function buildLangDropdown() {
-  const langs = ['All', ...Object.keys(LANG_DATA_SOURCES)];
+  const langs = Object.keys(LANG_DATA_SOURCES);
   const current = S.lang;
   makeDropdown('lang-dropdown', langs, current, val => {
     handleLanguageChange(val);
