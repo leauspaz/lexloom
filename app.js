@@ -1824,8 +1824,8 @@ function handleUpload(file) {
 //  Double tap: previous (always)
 
 (function initPresTapNav() {
-  const PRES_DOUBLE_TAP_MS = 350;   // max interval between taps to count as double
-  const PRES_TAP_MOVE_PX   = 10;    // max finger drift to still count as a tap
+  const PRES_DOUBLE_TAP_MS = 180;   // max interval between taps to count as double
+  const PRES_TAP_MOVE_PX = 10;    // max finger drift to still count as a tap
 
   let lastTapTime = 0;
   let lastTapX = 0;
