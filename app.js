@@ -1818,6 +1818,110 @@ function handleUpload(file) {
 
 /* ── Attach events ───────────────────────────────────────── */
 
+/* ── Presentation Mode Tap / Double-Tap Navigation ───────── */
+// Tap anywhere on the presentation background (not buttons/sentences) to navigate.
+//  Single tap: reveal → next
+//  Double tap: previous (always)
+
+(function initPresTapNav() {
+  const PRES_DOUBLE_TAP_MS = 180;   // max interval between taps to count as double
+  const PRES_TAP_MOVE_PX = 10;    // max finger drift to still count as a tap
+
+  let lastTapTime = 0;
+  let lastTapX = 0;
+  let lastTapY = 0;
+  let tapTimeout = null;
+  let isTouch = false;
+
+  // Elements that should NEVER trigger navigation
+  function isInteractiveTarget(el) {
+    // Buttons, links, inputs, selects
+    if (el.closest('button, a, input, select, textarea, label')) return true;
+    // The sentence text areas themselves (pres-primary, pres-secondary)
+    if (el.closest('#pres-primary, #pres-secondary')) return true;
+    // The meta info bar
+    if (el.closest('#pres-meta')) return true;
+    // Progress bar
+    if (el.closest('#pres-progress-bar')) return true;
+    return false;
+  }
+
+  function onPointerDown(e) {
+    isTouch = e.pointerType === 'touch';
+  }
+
+  function onTap(e) {
+    // Only active in presentation mode
+    if (!S.presMode) return;
+
+    const target = e.target;
+    if (isInteractiveTarget(target)) return;
+
+    const now = Date.now();
+    const x = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
+    const y = e.clientY ?? e.touches?.[0]?.clientY ?? 0;
+
+    // Check if this is a double tap (same area, within time window)
+    const dx = x - lastTapX;
+    const dy = y - lastTapY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const isDouble = (now - lastTapTime < PRES_DOUBLE_TAP_MS) && dist < PRES_TAP_MOVE_PX;
+
+    if (isDouble) {
+      // Double tap -> previous
+      if (tapTimeout) { clearTimeout(tapTimeout); tapTimeout = null; }
+      lastTapTime = 0; // reset so triple-tap doesn't double-fire
+      presPrev();
+      return;
+    }
+
+    // Single tap — defer to distinguish from double
+    lastTapTime = now;
+    lastTapX = x;
+    lastTapY = y;
+
+    if (tapTimeout) clearTimeout(tapTimeout);
+    tapTimeout = setTimeout(() => {
+      tapTimeout = null;
+      if (!S.presMode) return;
+      // State machine: not revealed → reveal, revealed → next
+      if (!S.presRevealed) {
+        presReveal();
+      } else {
+        presNext();
+      }
+    }, PRES_DOUBLE_TAP_MS);
+  }
+
+  const presContainer = $('presentation-mode');
+  if (!presContainer) return;
+
+  // Use pointer events for unified mouse + touch handling
+  presContainer.addEventListener('pointerdown', onPointerDown);
+  presContainer.addEventListener('click', onTap);
+
+  // Also handle touch events explicitly for better mobile responsiveness
+  presContainer.addEventListener('touchstart', (e) => {
+    // Store touch start position for move detection
+    const touch = e.touches[0];
+    presContainer._touchStartX = touch.clientX;
+    presContainer._touchStartY = touch.clientY;
+  }, { passive: true });
+
+  presContainer.addEventListener('touchend', (e) => {
+    if (!S.presMode) return;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - (presContainer._touchStartX ?? touch.clientX);
+    const dy = touch.clientY - (presContainer._touchStartY ?? touch.clientY);
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > PRES_TAP_MOVE_PX) return; // it was a swipe, not a tap
+
+    // Prevent the subsequent click from firing
+    e.preventDefault();
+    onTap(e);
+  });
+})();
+
 function attachEvents() {
   $('mute-btn').addEventListener('click', () => { S.autoPlay = !S.autoPlay; syncMuteBtn(); saveSettings(); });
   const muteBtnMobile = $('mute-btn-mobile');
