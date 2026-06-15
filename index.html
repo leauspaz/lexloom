@@ -4,6 +4,8 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4fcdb9">
   <meta property="og:title" content="Lexloom"/>
   <meta property="og:description" content="Sentence-Based Language Learning Flashcard App"/>
   <meta property="og:image" content="https://leauspaz.github.io/lexloom/preview.png"/>
@@ -417,5 +419,134 @@
 
 <script src="space_efficient_loader.js"></script>
 <script src="app.js"></script>
+
+<!-- PWA Service Worker Registration & Update UI -->
+<script>
+(function() {
+  if (!('serviceWorker' in navigator)) return;
+
+  let newWorker = null;
+  let updateBanner = null;
+
+  function createUpdateBanner() {
+    if (updateBanner) return;
+    const div = document.createElement('div');
+    div.id = 'sw-update-banner';
+    div.innerHTML = `
+      <span>New version available</span>
+      <button id="sw-update-btn">Update & Reload</button>
+      <button id="sw-dismiss-btn">Dismiss</button>
+    `;
+    document.body.appendChild(div);
+    updateBanner = div;
+
+    div.querySelector('#sw-update-btn').addEventListener('click', () => {
+      if (newWorker) {
+        newWorker.postMessage('SKIP_WAITING');
+      }
+    });
+    div.querySelector('#sw-dismiss-btn').addEventListener('click', () => {
+      div.remove();
+      updateBanner = null;
+    });
+  }
+
+  // Listen for controller change (new SW took over)
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      window.location.reload();
+    }
+  });
+
+  // Register the service worker
+  navigator.serviceWorker.register('/sw.js')
+    .then((registration) => {
+      // Check for waiting worker on page load
+      if (registration.waiting) {
+        newWorker = registration.waiting;
+        createUpdateBanner();
+      }
+
+      // Detect new service worker installing
+      registration.addEventListener('updatefound', () => {
+        if (registration.installing) {
+          newWorker = registration.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New version ready, show banner
+              createUpdateBanner();
+            }
+          });
+        }
+      });
+    })
+    .catch((err) => console.error('[SW] Registration failed:', err));
+})();
+</script>
+<style>
+#sw-update-banner {
+  position: fixed;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  background: var(--bg2, #0a1928);
+  border: 1px solid var(--accent, #4fcdb9);
+  border-radius: 10px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--mono, 'Space Mono', monospace);
+  font-size: 13px;
+  color: var(--head, #e2f1f5);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  animation: swBannerIn 300ms ease;
+}
+@keyframes swBannerIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+#sw-update-banner span { white-space: nowrap; }
+#sw-update-btn {
+  background: var(--accent, #4fcdb9);
+  color: var(--bg, #030613);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: none;
+  transition: opacity 150ms;
+}
+#sw-update-btn:hover { opacity: 0.8; }
+#sw-dismiss-btn {
+  background: transparent;
+  color: var(--text-dim, #505050);
+  border: 1px solid var(--border, #2a2a2a);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: none;
+  transition: all 150ms;
+}
+#sw-dismiss-btn:hover { color: var(--text, #b0b0b0); border-color: var(--text-dim); }
+@media (max-width: 640px) {
+  #sw-update-banner {
+    bottom: 80px;
+    left: 12px;
+    right: 12px;
+    transform: none;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  #sw-update-banner span { flex: 1 1 100%; text-align: center; }
+}
+</style>
+
 </body>
 </html>
