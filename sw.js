@@ -5,39 +5,65 @@
 const CACHE_VERSION = 1;
 const CACHE_NAME = `lexloom-v${CACHE_VERSION}`;
 
-// Files to pre-cache (the app shell)
+// Relative paths — works on GitHub Pages subdirectories
 const PRECACHE = [
-  "/",
-  "/index.html",
-  "/style.css",
-  "/app.js",
-  "/space_efficient_loader.js",
-  "/favicon.png",
-  "/preview.png",
-  "/manifest.json"
+  "./",
+  "./index.html",
+  "./style.css",
+  "./app.js",
+  "./space_efficient_loader.js",
+  "./favicon.png",
+  "./preview.png",
+  "./manifest.json"
 ];
 
 // ── Install: pre-cache app shell ─────────────────────────
 self.addEventListener("install", (event) => {
+  console.log("[SW] Installing v" + CACHE_VERSION);
+
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE))
-      .catch((err) => console.error("[SW] Precache failed:", err))
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      console.log("[SW] Opened cache, adding " + PRECACHE.length + " items");
+
+      // Try to add all, but if any fail, add individually so we know which one
+      try {
+        await cache.addAll(PRECACHE);
+        console.log("[SW] Precache complete");
+      } catch (err) {
+        console.warn("[SW] cache.addAll failed, trying individual adds...");
+        for (const url of PRECACHE) {
+          try {
+            await cache.add(url);
+            console.log("[SW] Cached:", url);
+          } catch (e) {
+            console.warn("[SW] Failed to cache:", url, "—", e.message);
+          }
+        }
+      }
+    })()
   );
-  // Skip waiting so the new SW activates immediately on next load
+
   self.skipWaiting();
 });
 
 // ── Activate: clean old caches, claim clients ──────────────
 self.addEventListener("activate", (event) => {
+  console.log("[SW] Activating v" + CACHE_VERSION);
   event.waitUntil(
     caches.keys().then((cacheNames) =>
       Promise.all(
         cacheNames
           .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
+          .map((name) => {
+            console.log("[SW] Deleting old cache:", name);
+            return caches.delete(name);
+          })
       )
-    ).then(() => self.clients.claim())
+    ).then(() => {
+      console.log("[SW] Claiming clients");
+      return self.clients.claim();
+    })
   );
 });
 
@@ -53,34 +79,36 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
 
   // Skip the service worker itself
-  if (url.pathname === "/sw.js") return;
+  if (url.pathname.endsWith("sw.js")) return;
 
   event.respondWith(
     caches.match(request).then((cached) => {
-      // Return cached immediately if found
       if (cached) return cached;
 
-      // Otherwise fetch and cache
-      return fetch(request).then((response) => {
-        if (!response || response.status !== 200 || response.type !== "basic") {
+      return caches.match(request, { ignoreSearch: true }).then((cachedNoQuery) => {
+        if (cachedNoQuery) return cachedNoQuery;
+
+        return fetch(request).then((response) => {
+          if (!response || response.status !== 200 || response.type !== "basic") {
+            return response;
+          }
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           return response;
-        }
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-        return response;
-      }).catch(() => {
-        // Offline fallback: return cached index.html for navigation
-        if (request.mode === "navigate") {
-          return caches.match("/index.html");
-        }
+        }).catch(() => {
+          if (request.mode === "navigate") {
+            return caches.match("./index.html");
+          }
+        });
       });
     })
   );
 });
 
-// ── Message handling: respond to skip-waiting from page ─
+// ── Message handling ─
 self.addEventListener("message", (event) => {
   if (event.data === "SKIP_WAITING") {
+    console.log("[SW] Skip waiting requested");
     self.skipWaiting();
   }
 });

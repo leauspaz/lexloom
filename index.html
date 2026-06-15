@@ -4,7 +4,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#4fcdb9">
   <meta property="og:title" content="Lexloom"/>
   <meta property="og:description" content="Sentence-Based Language Learning Flashcard App"/>
@@ -423,7 +423,10 @@
 <!-- PWA Service Worker Registration & Update UI -->
 <script>
 (function() {
-  if (!('serviceWorker' in navigator)) return;
+  if (!('serviceWorker' in navigator)) {
+    console.log('[SW] Service workers not supported');
+    return;
+  }
 
   let newWorker = null;
   let updateBanner = null;
@@ -460,30 +463,58 @@
     }
   });
 
-  // Register the service worker
-  navigator.serviceWorker.register('/sw.js')
+  // Register the service worker — use relative path for GitHub Pages subdirectory
+  navigator.serviceWorker.register('./sw.js')
     .then((registration) => {
+      console.log('[SW] Registered successfully. Scope:', registration.scope);
+
       // Check for waiting worker on page load
       if (registration.waiting) {
+        console.log('[SW] Waiting worker found');
         newWorker = registration.waiting;
         createUpdateBanner();
       }
 
       // Detect new service worker installing
       registration.addEventListener('updatefound', () => {
+        console.log('[SW] Update found');
         if (registration.installing) {
           newWorker = registration.installing;
           newWorker.addEventListener('statechange', () => {
+            console.log('[SW] State changed to:', newWorker.state);
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New version ready, show banner
+              console.log('[SW] New version ready');
               createUpdateBanner();
             }
           });
         }
       });
     })
-    .catch((err) => console.error('[SW] Registration failed:', err));
+    .catch((err) => {
+      console.error('[SW] Registration failed:', err);
+      // Show a subtle error indicator
+      const indicator = document.createElement('div');
+      indicator.id = 'sw-error-indicator';
+      indicator.title = 'PWA offline mode unavailable: ' + err.message;
+      indicator.innerHTML = '⚠️';
+      document.body.appendChild(indicator);
+    });
 })();
+
+// Debug helper: Ctrl+Shift+U to unregister SW and reload
+window.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.shiftKey && e.key === 'U') {
+    e.preventDefault();
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        Promise.all(regs.map(r => r.unregister())).then(() => {
+          console.log('[SW] All registrations unregistered');
+          window.location.reload();
+        });
+      });
+    }
+  }
+});
 </script>
 <style>
 #sw-update-banner {
@@ -535,6 +566,15 @@
   transition: all 150ms;
 }
 #sw-dismiss-btn:hover { color: var(--text, #b0b0b0); border-color: var(--text-dim); }
+#sw-error-indicator {
+  position: fixed;
+  bottom: 60px;
+  right: 16px;
+  z-index: 10000;
+  font-size: 16px;
+  opacity: 0.5;
+  cursor: help;
+}
 @media (max-width: 640px) {
   #sw-update-banner {
     bottom: 80px;
