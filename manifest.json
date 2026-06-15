@@ -11,13 +11,14 @@
     {
       "src": "./favicon.png",
       "sizes": "32x32",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "./preview.png",
-      "sizes": "512x512",
+      "sizes": "1200x630",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }

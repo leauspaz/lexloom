@@ -4,7 +4,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <link rel="manifest" href="./manifest.json">
+  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#4fcdb9">
   <meta property="og:title" content="Lexloom"/>
   <meta property="og:description" content="Sentence-Based Language Learning Flashcard App"/>
@@ -27,8 +27,6 @@
     gtag('js', new Date());
     gtag('config', 'G-F1DKQVV7QF');
   </script>
-<base target="_blank">
-<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -424,7 +422,7 @@
 <script>
 (function() {
   if (!('serviceWorker' in navigator)) {
-    console.log('[SW] Service workers not supported');
+    console.log('[SW] Service workers not supported in this browser');
     return;
   }
 
@@ -463,8 +461,12 @@
     }
   });
 
-  // Register the service worker — use relative path for GitHub Pages subdirectory
-  navigator.serviceWorker.register('./sw.js')
+  // Register the service worker
+  // Calculate path dynamically based on current URL (works for root or subdirectories)
+  const swPath = new URL('sw.js', window.location.href).href;
+  console.log('[SW] Attempting to register:', swPath);
+
+  navigator.serviceWorker.register(swPath)
     .then((registration) => {
       console.log('[SW] Registered successfully. Scope:', registration.scope);
 

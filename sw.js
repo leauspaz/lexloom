@@ -5,17 +5,21 @@
 const CACHE_VERSION = 1;
 const CACHE_NAME = `lexloom-v${CACHE_VERSION}`;
 
-// Relative paths — works on GitHub Pages subdirectories
+// Build absolute paths based on where the SW is located
+const BASE = self.location.pathname.replace(/\/sw\.js$/, '');
 const PRECACHE = [
-  "./",
-  "./index.html",
-  "./style.css",
-  "./app.js",
-  "./space_efficient_loader.js",
-  "./favicon.png",
-  "./preview.png",
-  "./manifest.json"
+  BASE + "/",
+  BASE + "/index.html",
+  BASE + "/style.css",
+  BASE + "/app.js",
+  BASE + "/space_efficient_loader.js",
+  BASE + "/favicon.png",
+  BASE + "/preview.png",
+  BASE + "/manifest.json"
 ];
+
+console.log("[SW] Base path:", BASE);
+console.log("[SW] Precache list:", PRECACHE);
 
 // ── Install: pre-cache app shell ─────────────────────────
 self.addEventListener("install", (event) => {
@@ -26,19 +30,12 @@ self.addEventListener("install", (event) => {
       const cache = await caches.open(CACHE_NAME);
       console.log("[SW] Opened cache, adding " + PRECACHE.length + " items");
 
-      // Try to add all, but if any fail, add individually so we know which one
-      try {
-        await cache.addAll(PRECACHE);
-        console.log("[SW] Precache complete");
-      } catch (err) {
-        console.warn("[SW] cache.addAll failed, trying individual adds...");
-        for (const url of PRECACHE) {
-          try {
-            await cache.add(url);
-            console.log("[SW] Cached:", url);
-          } catch (e) {
-            console.warn("[SW] Failed to cache:", url, "—", e.message);
-          }
+      for (const url of PRECACHE) {
+        try {
+          await cache.add(url);
+          console.log("[SW] Cached:", url);
+        } catch (e) {
+          console.warn("[SW] Failed to cache:", url, "—", e.message);
         }
       }
     })()
@@ -97,7 +94,7 @@ self.addEventListener("fetch", (event) => {
           return response;
         }).catch(() => {
           if (request.mode === "navigate") {
-            return caches.match("./index.html");
+            return caches.match(BASE + "/index.html");
           }
         });
       });
