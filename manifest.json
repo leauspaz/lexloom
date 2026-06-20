@@ -2,17 +2,18 @@
   "name": "Lexloom",
   "short_name": "Lexloom",
   "description": "Sentence-Based Language Learning Flashcard App",
-  "start_url": "./",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#030613",
   "theme_color": "#4fcdb9",
-  "orientation": "portrait",
+  "orientation": "any",
+  "scope": ".",
   "icons": [
     {
       "src": "./favicon.png",
-      "sizes": "32x32",
+      "sizes": "32x32 48x48 64x64",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "./preview.png",

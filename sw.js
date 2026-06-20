@@ -64,7 +64,7 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// ── Fetch: cache-first for same-origin, network for rest ─
+// ── Fetch: stale-while-revalidate for same-origin ────────
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -80,23 +80,36 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(
     caches.match(request).then((cached) => {
-      if (cached) return cached;
-
-      return caches.match(request, { ignoreSearch: true }).then((cachedNoQuery) => {
-        if (cachedNoQuery) return cachedNoQuery;
-
-        return fetch(request).then((response) => {
-          if (!response || response.status !== 200 || response.type !== "basic") {
-            return response;
-          }
+      // Return cached immediately, but fetch updated version in background
+      const fetchPromise = fetch(request).then((response) => {
+        if (response && response.status === 200 && response.type === "basic") {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        }
+        return response;
+      }).catch(() => {
+        // Network failed, we already returned cached if available
+        return cached;
+      });
+
+      // If we have a cached version, return it immediately (stale-while-revalidate)
+      if (cached) {
+        return cached;
+      }
+
+      // No cache — wait for network
+      return fetchPromise.then((response) => {
+        if (!response || response.status !== 200 || response.type !== "basic") {
           return response;
-        }).catch(() => {
-          if (request.mode === "navigate") {
-            return caches.match(BASE + "/index.html");
-          }
-        });
+        }
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        return response;
+      }).catch(() => {
+        // Final fallback for navigation
+        if (request.mode === "navigate") {
+          return caches.match(BASE + "/index.html");
+        }
       });
     })
   );
